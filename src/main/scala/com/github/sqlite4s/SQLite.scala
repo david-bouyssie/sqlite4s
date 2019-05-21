@@ -36,7 +36,7 @@ object SQLite {
     */
   lazy val compileOptions: String = _getCompileOptions()
 
-  def _getCompileOptions(): String = {
+  private def _getCompileOptions(): String = {
     val sb = new StringBuilder()
 
     var i = 0

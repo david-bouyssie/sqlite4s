@@ -560,7 +560,7 @@ final class SQLiteStatement private() extends Logging {
   // This method  should be inlined for better performance
   @throws[SQLiteException]
   @inline
-  def _bind[T](fnSignature: String, traceMsg: => String, bindingFn: => CInt): SQLiteStatement = {
+  private def _bind[T](fnSignature: String, traceMsg: => String, bindingFn: => CInt): SQLiteStatement = {
     myController.validate()
     logger.trace(mkLogMessage(traceMsg))
 
