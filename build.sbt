@@ -1,10 +1,10 @@
-/*name := "sqlite4s"
-version := "0.1"
+name := "sqlite4s"
+organization := "com.github.david-bouyssie"
+version := "0.1.1"
 scalaVersion := "2.11.12"
 
 libraryDependencies += "biz.enef" %%% "slogging" % "0.6.1"
-libraryDependencies += "biz.enef" % "slogging_native0.3_2.11" % "0.6.1"
-libraryDependencies += "com.lihaoyi" %%% "utest" % "0.6.6" % "test"
+libraryDependencies += "com.lihaoyi" %%% "utest" % "0.6.7" % "test"
 
 testFrameworks += new TestFramework("utest.runner.Framework")
 
@@ -14,10 +14,46 @@ enablePlugins(ScalaNativePlugin)
 nativeLinkStubs := true
 
 nativeMode := "release"
-//nativeLTO := "full" // will be available in 0.3.9
+//nativeLTO := "thin" // will be available in 0.4.0
 
-*/
+// Your profile name of the sonatype account. The default is the same with the organization value
+sonatypeProfileName := "david-bouyssie"
 
+scmInfo := Some(
+  ScmInfo(
+    url("https://github.com/david-bouyssie/sqlite4s"),
+    "scm:git@github.com:david-bouyssie/sqlite4s.git"
+  )
+)
+developers := List(
+  Developer(
+    id    = "david-bouyssie",
+    name  = "David Bouyssié",
+    email = "",
+    url   = url("https://github.com/david-bouyssie")
+  )
+)
+description := "A Scala Native wrapper of the SQLite C library."
+licenses := List("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))
+homepage := Some(url("https://github.com/david-bouyssie/sqlite4s"))
+pomIncludeRepository := { _ => false }
+publishMavenStyle := true
+
+publishTo := {
+  val nexus = "https://oss.sonatype.org/"
+  if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
+  else Some("releases" at nexus + "service/local/staging/deploy/maven2")
+}
+
+// Workaround for issue https://github.com/sbt/sbt/issues/3570
+updateOptions := updateOptions.value.withGigahorse(false)
+
+useGpg := true
+pgpPublicRing := file("~/.gnupg/pubring.kbx")
+pgpSecretRing := file("~/.gnupg/pubring.kbx")
+Test / skip in publish := true
+
+/*
 val commonSettings = Seq(
   version := "0.1.0",
   organization := "com.github.david-bouyssie",
@@ -65,3 +101,4 @@ val sqlite4s = project
   .settings(commonSettings)
   .settings(publishSettings)
   .enablePlugins(ScalaNativePlugin)
+*/

@@ -29,14 +29,14 @@ If you are already familiar with Scala Native you can jump right in by adding th
 libraryDependencies += "com.github.david-bouyssie" %%% "sqlite4s" % "x.y.z"
 ```
 
-To use in `sbt`, replace `x.y.z` with the latest version number (currently 0.1).
+To use in `sbt`, replace `x.y.z` with the latest version number (currently 0.1.1).
 
 <!-- To use in `sbt`, replace `x.y.z` with the version from Maven Central badge above.
 All available versions can be seen at the [Maven Repository](https://mvnrepository.com/artifact/org.ekrich/sblas). -->
 
 Otherwise follow the [Getting Started](https://scala-native.readthedocs.io/en/latest/user/setup.html) instructions for Scala Native if you are not already setup.
 
-Additionally, you need to [SQLite](https://www.sqlite.org) on you system  as follows:
+Additionally, you need to install [SQLite](https://www.sqlite.org) on you system  as follows:
 
 * Linux/Ubuntu
 
@@ -51,6 +51,11 @@ $ brew install sqlite3
 ```
 
 * Other OSes need to have `libsqlite3` available on the system.
+An alternative could consist in creating a project sub-directory called for instance "native-lib" and to put the SQLite shared library in this directory.
+Then you would also have to change the build.sbt file and add the following settings:
+```
+nativeLinkingOptions ++= Seq("-L" ++ baseDirectory.value.getAbsolutePath() ++ "/native-lib")
+```
 
 ## Useful links:
 
