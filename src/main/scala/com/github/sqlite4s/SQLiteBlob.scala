@@ -17,7 +17,8 @@
 
 package com.github.sqlite4s
 
-import scala.scalanative.native._
+import scala.scalanative.unsafe._
+
 import Internal._
 import SQLITE_WRAPPER_ERROR_CODE._
 import com.github.sqlite4s.bindings.sqlite
@@ -202,7 +203,7 @@ final class SQLiteBlob private(
     if (offset < 0 || offset + length > buffer.length)
       throw new ArrayIndexOutOfBoundsException(s"${buffer.length} $offset $length")
 
-    val bufferPtr = buffer.asInstanceOf[scala.scalanative.runtime.ByteArray].at(0).cast[Ptr[Byte]]
+    val bufferPtr = buffer.asInstanceOf[scala.scalanative.runtime.ByteArray].at(0) //.asInstanceOf[Ptr[Byte]]
     val newBufferPtr = bufferPtr + offset
 
     myController.validate()
@@ -245,7 +246,7 @@ final class SQLiteBlob private(
   /**
     * Clear all data, disposing the blob. May be called by SQLiteConnection on close.
     */
-  def clear(): Unit = {
+  protected[sqlite4s] def clear(): Unit = {
     myHandle = null
     myController = SQLiteController.getDisposed(myController)
     logger.trace(mkLogMessage("cleared"))

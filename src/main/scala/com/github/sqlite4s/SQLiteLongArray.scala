@@ -17,7 +17,7 @@
 
 /*package com.github.sqlite4s
 
-import scala.scalanative.native._
+import scala.scalanative.unsafe._
 
 import bindings.sqlite
 import SQLITE_WRAPPER_ERROR_CODE.WRAPPER_STATEMENT_DISPOSED

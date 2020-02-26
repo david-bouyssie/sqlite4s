@@ -84,8 +84,8 @@ object SQLiteQueue {
 /**
   * Constructs the queue and allows to specify a factory for the queue thread.
   *
-  * @param databaseFile  database file to connect to, or null to open an in-memory database
-  * @param threadFactory the factory for thread(s), cannot be null
+  * @param myDatabaseFile  database file to connect to, or null to open an in-memory database
+  * @param myThreadFactory the factory for thread(s), cannot be null
   */
 class SQLiteQueue(
   /**
@@ -288,8 +288,8 @@ class SQLiteQueue(
     * </pre>
     *
     * @param job the job to be executed on this queue's database connection, must not be null
-    * @param <   T> class of the job's result; use Object or Void if no result is needed
-    * @param <   J> job class
+    * @param [T] class of the job's result; use Object or Void if no result is needed
+    * @param [J] job class
     * @return job
     * @see SQLiteJob
     */

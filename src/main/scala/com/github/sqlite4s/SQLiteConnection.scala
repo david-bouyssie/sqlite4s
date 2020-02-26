@@ -21,7 +21,7 @@ import java.io.{File, IOException}
 import java.util
 import java.util.Locale
 
-import scala.scalanative.native._
+import scala.scalanative.unsafe._
 
 import bindings.sqlite
 import bindings.sqlite.SQLITE_CONSTANT._
@@ -96,8 +96,8 @@ object SQLiteConnection {
   *
   * @param dbfile database file, or null to create an in-memory database
   */
-final class SQLiteConnection(val myFile: File) extends Logging {
-  logger.info(mkLogMessage(this.toString(), s"instantiated [$myFile]"))
+final class SQLiteConnection(val dbfile: File) extends Logging {
+  logger.info(mkLogMessage(this.toString(), s"instantiated [$dbfile]"))
 
   /**
     * An incremental number of the instance, used for debugging purposes.
@@ -220,14 +220,18 @@ final class SQLiteConnection(val myFile: File) extends Logging {
     *
     * @return the file that hosts the database, or null if database is in memory
     */
-  def getDatabaseFile(): File = myFile
+  def getDatabaseFile(): File = dbfile
+
+  private def getSqliteDbName(): String = {
+    if (dbfile == null) ":memory:" else dbfile.getAbsolutePath
+  }
 
   /**
     * Checks whether this connection is to an in-memory database. This method is <strong>thread-safe</strong>.
     *
     * @return true if the connection is to the memory database
     */
-  def isMemoryDatabase(): Boolean = myFile == null
+  def isMemoryDatabase(): Boolean = dbfile == null
 
   /**
     * Sets the frequency of database callbacks during long-running SQL statements. Database callbacks
@@ -1673,10 +1677,6 @@ final class SQLiteConnection(val myFile: File) extends Logging {
   private def configureConnection(handle: SQLiteConnection.Handle): Unit = {
     val rc = sqlite.sqlite3_extended_result_codes(handle, 1)
     if (rc != SQLITE_OK) logger.warn(mkLogMessage(s"cannot enable extended result codes [$rc]"))
-  }
-
-  private def getSqliteDbName(): String = {
-    if (myFile == null) ":memory:" else myFile.getAbsolutePath
   }
 
   def getStatementCount(): Int = myLock synchronized { myStatements.size }

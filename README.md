@@ -21,7 +21,7 @@ Please note that the Job queue feature is not yet implemented in SQLite4S due to
 Regarding the Long array feature I decided it was low priority for a first implementation, but if it is an issue for your own project do not hesitate to open an issue.
 
 ## Getting started
-<!-- [![Maven Central](https://img.shields.io/maven-central/v/org.ekrich/sblas_native0.3_2.11.svg)](https://maven-badges.herokuapp.com/maven-central/org.ekrich/sblas_native0.3_2.11) -->
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.david-bouyssie/sqlite4s_native0.3_2.11/0.1.0)](https://mvnrepository.com/artifact/com.github.david-bouyssie/sqlite4s_native0.3_2.11/0.1.0)
 
 If you are already familiar with Scala Native you can jump right in by adding the following dependency in your `sbt` build file.
 
@@ -29,10 +29,8 @@ If you are already familiar with Scala Native you can jump right in by adding th
 libraryDependencies += "com.github.david-bouyssie" %%% "sqlite4s" % "x.y.z"
 ```
 
-To use in `sbt`, replace `x.y.z` with the latest version number (currently 0.1.1).
-
-<!-- To use in `sbt`, replace `x.y.z` with the version from Maven Central badge above.
-All available versions can be seen at the [Maven Repository](https://mvnrepository.com/artifact/org.ekrich/sblas). -->
+To use in `sbt`, replace `x.y.z` with the version from Maven Central badge above.
+All available versions can be seen at the [Maven Repository](https://mvnrepository.com/artifact/com.github.david-bouyssie/sqlite4s).
 
 Otherwise follow the [Getting Started](https://scala-native.readthedocs.io/en/latest/user/setup.html) instructions for Scala Native if you are not already setup.
 

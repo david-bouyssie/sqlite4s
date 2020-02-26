@@ -16,20 +16,56 @@
 
 package com.github.sqlite4s
 
-import slogging._
+import scribe._
+import scribe.filter._
 
 // Used to abstract Logging from used library
-trait Logging extends slogging.LazyLogging
+trait Logging extends scribe.Logging
 
 object Logging {
 
-  type LogLevel = slogging.LogLevel
-  val LogLevel = slogging.LogLevel
+  type LogLevel = com.github.sqlite4s.LogLevel
+  val LogLevel = com.github.sqlite4s.LogLevel
 
   private val namespace = "com.github.sqlite4s"
 
-  // TODO: use scribe instead for better performance (https://github.com/outr/scribe/wiki/getting-started)
+  // configureLogger function for scribe (https://github.com/outr/scribe/wiki/getting-started)
+  // should provide better performance than slogging
   // See: http://www.matthicks.com/2018/02/scribe-2-fastest-jvm-logger-in-world.html
+  def configureLogger(minLogLevel: Logging.LogLevel = LogLevel.DEBUG): Unit = {
+
+    // set log level, e.g. to DEBUG
+    val scribeMinLogLevelOpt = Option(minLogLevel match {
+      case LogLevel.OFF => null
+      case LogLevel.ERROR => Level.Error
+      case LogLevel.WARN => Level.Warn
+      case LogLevel.INFO => Level.Info
+      case LogLevel.DEBUG => Level.Debug
+      case LogLevel.TRACE => Level.Trace
+    })
+
+    val logger = scribe.Logger.root.clearHandlers().clearModifiers().withHandler(
+      minimumLevel = scribeMinLogLevelOpt
+    )
+
+    if (scribeMinLogLevelOpt.isDefined) {
+      logger.withModifier(
+        select(packageName.startsWith(namespace))
+          .exclude(level < scribeMinLogLevelOpt.get)
+          .priority(Priority.High)
+      ).replace()
+    } else {
+      logger.withModifier(
+        select(packageName.startsWith(namespace))
+          .exclude(level <= Level.Error)
+          .priority(Priority.High)
+      ).replace()
+    }
+
+  }
+
+  // old configureLogger function for slogging
+  /*
   def configureLogger(logLevel: Logging.LogLevel = LogLevel.DEBUG): Unit = {
 
     // select logger backend, e.g. simple logging using println (supported by Scala/JVM, Scala.js, and Scala Native)
@@ -61,4 +97,5 @@ object Logging {
       case _ => PrintLogger
     }
   }
+   */
 }

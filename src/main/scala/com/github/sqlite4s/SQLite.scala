@@ -17,8 +17,8 @@
 
 package com.github.sqlite4s
 
-import scala.scalanative.native._
 import scala.scalanative.runtime.Platform
+import scala.scalanative.unsafe._
 
 import com.github.sqlite4s.c.util.CUtils
 
@@ -42,8 +42,10 @@ object SQLite {
     */
   lazy val libVersion: CString = sqlite.sqlite3_libversion()
 
+  def getLibraryVersion(): String = CUtils.fromCString(libVersion)
+
   /** SQLite4Java backward compatibility */
-  def getSQLiteVersion(): String = fromCString(libVersion)
+  def getSQLiteVersion(): String = CUtils.fromCString(libVersion)
 
   /**
     * The compile-time options used to compile the used library.

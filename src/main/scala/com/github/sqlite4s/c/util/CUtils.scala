@@ -18,9 +18,11 @@ package com.github.sqlite4s.c.util
 
 import java.nio.charset.Charset
 
-import scala.scalanative.native._
-import scala.scalanative.native.string.strstr
-import scala.scalanative.runtime.{ByteArray, DoubleArray, FloatArray}
+import scala.scalanative.runtime.{ Array => CArray, _ }
+import scala.scalanative.libc._
+import scala.scalanative.libc.string.strstr
+import scala.scalanative.unsafe._
+import scala.scalanative.unsigned._
 
 object CUtils {
 
@@ -42,12 +44,15 @@ object CUtils {
     offset
   }
 
-  @inline def strcpy(dest: CString, src: CString, length: CSize): Long = {
+  @inline def strcpy(dest: CString, src: CString, length: CSize): CString = {
     libc.memcpy(dest, src, length)
     dest( length ) = NULL_CHAR
+    dest
   }
 
   @inline def bytes2ByteArray(bytes: Ptr[Byte], len: CSize): Array[Byte] = {
+    if (len == 0) return Array()
+
     val byteArray = ByteArray.alloc(len.toInt) // allocate memory
     val byteArrayPtr = byteArray.at(0)
 
@@ -64,8 +69,8 @@ object CUtils {
 
   def doublePtr2DoubleArray(doubles: Ptr[CDouble], len: Int): Array[Double] = {
     val arr = DoubleArray.alloc(len)
-    val dst = arr.at(0).cast[Ptr[Byte]]
-    val src = doubles.cast[Ptr[Byte]]
+    val dst = arr.at(0).asInstanceOf[Ptr[Byte]]
+    val src = doubles.asInstanceOf[Ptr[Byte]]
     val size = sizeof[CDouble] * len
 
     libc.memcpy(dst, src, size)
@@ -101,8 +106,8 @@ object CUtils {
 
   def floatPtr2FloatArray(floats: Ptr[CFloat], len: Int): Array[Float] = {
     val arr  = FloatArray.alloc(len)
-    val dst  = arr.at(0).cast[Ptr[Byte]]
-    val src  = floats.cast[Ptr[Byte]]
+    val dst  = arr.at(0).asInstanceOf[Ptr[Byte]]
+    val src  = floats.asInstanceOf[Ptr[Byte]]
     val size = sizeof[CFloat] * len
 
     libc.memcpy(dst, src, size)
@@ -130,7 +135,7 @@ object CUtils {
     }*/
     val bytes = bytes2ByteArray(cstr, len)
 
-    new String(bytes, charset)
+    new java.lang.String(bytes, charset)
   }
 
   def bytesToCString(bytes: Array[Byte])(implicit z: Zone): CString = {
@@ -162,7 +167,7 @@ object CUtils {
   @inline
   def fromCString(cstr: CString, charset: Charset): String = {
     if (cstr == null) return null
-    scala.scalanative.native.fromCString(cstr, charset)
+    scala.scalanative.unsafe.fromCString(cstr, charset)
   }
 
   @inline
@@ -173,7 +178,7 @@ object CUtils {
   @inline
   def toCString(str: String, charset: Charset)(implicit z: Zone): CString = {
     if (str == null) return null
-    scala.scalanative.native.toCString(str, charset)
+    scala.scalanative.unsafe.toCString(str, charset)
   }
 
 }
@@ -204,7 +209,7 @@ trait CUIntEnum {
   sealed trait _value_type
   type Value = CUnsignedInt with _value_type
 
-  @inline protected implicit def cint2typedValue(cint: CInt): Value = new NativeRichInt(cint).toUInt.asInstanceOf[Value]
+  @inline protected implicit def cint2typedValue(cint: CInt): Value = new UnsignedRichInt(cint).toUInt.asInstanceOf[Value]
   @inline protected implicit def cuint2typedValue(cuint: CUnsignedInt): Value = cuint.asInstanceOf[Value]
 
   @inline def Value(cint: CInt): Value = cint2typedValue(cint)

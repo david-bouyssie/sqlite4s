@@ -1,10 +1,10 @@
 name := "sqlite4s"
 organization := "com.github.david-bouyssie"
-version := "0.1.1"
+version := "0.2.0"
 scalaVersion := "2.11.12"
 
-libraryDependencies += "biz.enef" %%% "slogging" % "0.6.1"
-libraryDependencies += "com.lihaoyi" %%% "utest" % "0.6.7" % "test"
+libraryDependencies += "com.outr" %%% "scribe" % "2.7.11"
+libraryDependencies += "com.lihaoyi" %%% "utest" % "0.7.4" % "test"
 
 testFrameworks += new TestFramework("utest.runner.Framework")
 
@@ -14,7 +14,7 @@ enablePlugins(ScalaNativePlugin)
 nativeLinkStubs := true
 
 nativeMode := "release"
-//nativeLTO := "thin" // will be available in 0.4.0
+nativeLTO := "thin" // will be available in 0.4.0
 
 // Your profile name of the sonatype account. The default is the same with the organization value
 sonatypeProfileName := "david-bouyssie"
@@ -45,8 +45,8 @@ publishTo := {
   else Some("releases" at nexus + "service/local/staging/deploy/maven2")
 }
 
-// Workaround for issue https://github.com/sbt/sbt/issues/3570
-updateOptions := updateOptions.value.withGigahorse(false)
+// Workaround for issue https://github.com/sbt/sbt/issues/3570 (fixed in 1.3.x)
+//updateOptions := updateOptions.value.withGigahorse(false)
 
 useGpg := true
 pgpPublicRing := file("~/.gnupg/pubring.kbx")
@@ -55,7 +55,7 @@ Test / skip in publish := true
 
 /*
 val commonSettings = Seq(
-  version := "0.1.0",
+  version := "0.2.0",
   organization := "com.github.david-bouyssie",
   scalaVersion := "2.11.12",
   //nativeLinkStubs := true,

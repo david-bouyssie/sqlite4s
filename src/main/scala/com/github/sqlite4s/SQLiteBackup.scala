@@ -17,7 +17,8 @@
 
 package com.github.sqlite4s
 
-import scala.scalanative.native._
+import scala.scalanative.unsafe._
+
 import bindings.sqlite
 import bindings.sqlite.SQLITE_CONSTANT.SQLITE_DONE
 import SQLITE_WRAPPER_ERROR_CODE.WRAPPER_BACKUP_DISPOSED

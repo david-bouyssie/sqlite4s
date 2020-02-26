@@ -22,6 +22,14 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
+object SQLiteJob { // internal state constants
+  private val PENDING = 0
+  private val RUNNING = 1
+  private val SUCCEEDED = 2
+  private val ERROR = 3
+  private val CANCELLED = 4
+}
+
 /**
   * SQLiteJob is a unit of work accepted by {@link SQLiteQueue}. You can
   * implement {@link #job} method and add the job to the queue with {@link SQLiteQueue#execute} method.
@@ -47,18 +55,10 @@ import java.util.concurrent.TimeoutException
   * remain unfinished, locks held, and you possible wouldn't know which job will execute next in the context of
   * this unfinished transaction.
   *
-  * @param < T> type of the result
+  * @tparam T type of the result
   * @see SQLiteQueue
   * @author Igor Sereda
   */
-object SQLiteJob { // internal state constants
-  private val PENDING = 0
-  private val RUNNING = 1
-  private val SUCCEEDED = 2
-  private val ERROR = 3
-  private val CANCELLED = 4
-}
-
 abstract class SQLiteJob[T] extends Future[T] with Logging { // <: AnyRef
 
   /**

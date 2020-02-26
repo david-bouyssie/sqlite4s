@@ -21,8 +21,6 @@ private[this] object Internal {
 
   private final val LOG_PREFIX = "[sqlite4s] "
 
-  type Logger = slogging.Logger
-
   def mkLogMessage(message: String): String = {
     mkLogMessage(null, message)
   }

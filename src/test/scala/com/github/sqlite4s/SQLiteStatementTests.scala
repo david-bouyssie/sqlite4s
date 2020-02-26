@@ -88,7 +88,7 @@ object SQLiteStatementTests extends SQLiteConnectionFixture {
     assert(st2 != st4)
     assert(st3 != st4)
     assert(h3 == st4.statementHandle)
-    assert(3 == connection.getStatementCount)
+    assert(3 == connection.getStatementCount())
     assert(!st1.isDisposed())
     assert(!st2.isDisposed())
     assert(st3.isDisposed())

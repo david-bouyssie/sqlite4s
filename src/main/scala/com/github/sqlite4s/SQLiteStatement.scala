@@ -21,8 +21,9 @@ import java.io.IOException
 import java.nio.BufferUnderflowException
 import java.util
 
-import scala.scalanative.native._
 import scala.scalanative.runtime.ByteArray
+import scala.scalanative.unsafe._
+
 import bindings.sqlite.SQLITE_CONSTANT._
 import com.github.sqlite4s.bindings.sqlite_addons.sqlite3_destructor_type
 import com.github.sqlite4s.bindings.sqlite_addons.DESTRUCTOR_TYPE._

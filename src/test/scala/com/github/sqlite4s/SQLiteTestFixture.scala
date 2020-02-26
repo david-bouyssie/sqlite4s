@@ -17,7 +17,6 @@
 
 package com.github.sqlite4s
 
-import scala.scalanative.native._
 import java.io.File
 import java.util.Random
 
@@ -118,9 +117,6 @@ object SQLiteTestFixture {
 
 abstract class SQLiteTestFixture() extends TestSuite with Logging {
 
-  // Configure the Logger
-  Logging.configureLogger(Logging.LogLevel.INFO)
-
   private val enableTempDataDeletion = true
   final private val sqliteManual = new SQLiteWrapper()
   private var myTempDir: File = _
@@ -132,12 +128,15 @@ abstract class SQLiteTestFixture() extends TestSuite with Logging {
   }
 
   override def utestBeforeEach(path: Seq[String]): Unit = {
-    println(s"on before each test")
+    // Configure the Logger
+    Logging.configureLogger(Logging.LogLevel.INFO)
+
+    //println(s"on before each test")
     setUp()
   }
 
   override def utestAfterEach(path: Seq[String]): Unit = {
-    println(s"on after each test")
+    //println(s"on after each test")
     tearDown()
   }
 

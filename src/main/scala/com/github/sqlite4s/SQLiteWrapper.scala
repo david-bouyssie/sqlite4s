@@ -19,6 +19,10 @@ package com.github.sqlite4s
 
 import java.nio.charset
 
+import scala.scalanative.runtime.ByteArray
+import scala.scalanative.unsafe._
+import scala.scalanative.unsigned._
+
 import bindings.sqlite
 import bindings.sqlite.SQLITE_CONSTANT._
 import bindings.sqlite_addons.DESTRUCTOR_TYPE._
@@ -26,8 +30,24 @@ import bindings.sqlite_addons.sqlite3_destructor_type
 import com.github.sqlite4s.SQLITE_WRAPPER_ERROR_CODE._
 import com.github.sqlite4s.c.util.{CUtils, PtrBox}
 
-import scala.scalanative.native._
-import scala.scalanative.runtime.ByteArray
+/*object Bytes2Hex {
+  private val hexArray = "0123456789ABCDEF".toCharArray
+
+  def convert(bytes: Array[Byte]): String = {
+    val hexChars = new Array[Char](bytes.length * 2)
+
+    var j = 0
+    while (j < bytes.length) {
+      val v = bytes(j) & 0xFF
+      hexChars(j * 2) = hexArray(v >>> 4)
+      hexChars(j * 2 + 1) = hexArray(v & 0x0F)
+
+      j += 1
+    }
+
+    new String(hexChars)
+  }
+}*/
 
 object SQLiteWrapper {
 
@@ -35,6 +55,7 @@ object SQLiteWrapper {
   private val EMPTY_CSTRING: CString = c""
 
   private val DEFAULT_CHARSET = charset.Charset.defaultCharset()
+  // FIXME: the BOM is missing, since there is a bug in String.getBytes() introduced in SN v0.4.0-M2 (see https://github.com/scala-native/scala-native/issues/1669)
   private val UTF8_CHARSET = charset.StandardCharsets.UTF_8
   private val UTF16_CHARSET = charset.StandardCharsets.UTF_16
 
@@ -73,7 +94,7 @@ object SQLiteWrapper {
     *
     * @param db       handle
     * @param sql      sql statements
-    * @param outError (nullable) container for parsing errors
+    * @param throwErrors enable to throw an Exception on error
     * @return result code
     */
   def sqlite3Exec(db: SQLiteConnection.Handle, sql: String, throwErrors: Boolean = false): (Int, Option[String]) = {
@@ -86,6 +107,9 @@ object SQLiteWrapper {
     val rc = Zone { implicit z: Zone =>
 
       // Note: we use the Charset "UTF-8" to get sql in correct UTF-8
+      // FIXME: the BOM is missing, since there is a bug in String.getBytes() introduced in SN v0.4.0-M2 (see https://github.com/scala-native/scala-native/issues/1669)
+      //val utf8Sql = CUtils.toCString(sql, UTF8_CHARSET)
+
       val utf8Sql = CUtils.toCString(sql, UTF8_CHARSET)
 
       sqlite.sqlite3_exec(
@@ -231,7 +255,7 @@ object SQLiteWrapper {
     require(stmt != null, "db is null")
     require(value != null, "value is null")
 
-    val valueLen: CInt = value.length + 1
+    val valueLen: CInt = value.length // + 1
     var effectiveDestructor = destructor
 
     var utf8Str: CString = null
@@ -251,8 +275,12 @@ object SQLiteWrapper {
       !utf8StrPtr = CUtils.bytesToCString(encodedCharsAsBytes)*/
 
       val encodedCharsAsBytes = value.getBytes(UTF16_CHARSET)
-      utf8StrNulTermOffset = encodedCharsAsBytes.length
-      utf8Str = CUtils.bytesToCString(encodedCharsAsBytes)
+      // FIXME: the BOM is missing, since there is a bug in String.getBytes() introduced in SN v0.4.0-M2 (see https://github.com/scala-native/scala-native/issues/1669)
+      val UTF16_BE_BOM = Array(0xFE.toByte, 0xFF.toByte)
+      val fixedEncodedCharsAsBytes = UTF16_BE_BOM ++ encodedCharsAsBytes
+
+      utf8StrNulTermOffset = fixedEncodedCharsAsBytes.length
+      utf8Str = CUtils.bytesToCString(fixedEncodedCharsAsBytes)
 
     } else {
       effectiveDestructor = SQLITE_STATIC
@@ -371,18 +399,30 @@ object SQLiteWrapper {
     require(bufferOffset + length <= bufferLength, "offset+length sum is invalid, it should not be greater than valueLength")
   }
 
-  val progress_handler_cb: CFunctionPtr1[Ptr[Byte], CInt] = CFunctionPtr.fromFunction1(progress_handler)
+  val progress_handler_cb: CFuncPtr1[Ptr[Byte], CInt] = new CFuncPtr1[Ptr[Byte], CInt] {
+    def apply(ptr: Ptr[Byte]): CInt = {
+      if (ptr == null) return 1
+
+      val longPtr = ptr.asInstanceOf[Ptr[CLong]]
+
+      longPtr.update(1,longPtr(1) + 1L)
+      if (longPtr(0) != 0) return -1
+
+      0
+    }
+  }
+  /*CFunctionPtr.fromFunction1(progress_handler)
 
   def progress_handler(ptr: Ptr[Byte]): CInt = {
     if (ptr == null) return 1
 
-    val longPtr = ptr.cast[Ptr[CLong]]
+    val longPtr = ptr.asInstanceOf[Ptr[CLong]]
 
     longPtr.update(1,longPtr(1) + 1L)
     if (longPtr(0) != 0) return -1
 
     0
-  }
+  }*/
 
   /*
   int progress_handler(void *ptr) {
@@ -422,8 +462,8 @@ class SQLiteWrapper {
     * High-level wrapper of sqlite3_open_v2
     *
     * @param filename database file name, not null
-    * @param ppDb long[1] container for the db handle
     * @param flags see SQLITE_OPEN_* constants
+    * @param throwErrors enable to throw an Exception on error
     * @return return code SQLITE_OK or other
     */
   def sqlite3OpenV2(filename: String, flags: Int, throwErrors: Boolean = false): SQLiteConnection.Handle = {
@@ -543,9 +583,15 @@ class SQLiteWrapper {
       // then there is a small performance advantage to passing an nByte parameter
       // that is the number of bytes in the input string including the nul-terminator.
       val utf16Bytes = sql.getBytes(SQLiteWrapper.UTF16_CHARSET)
-      val utf16Sql = CUtils.bytesToCString(utf16Bytes)(z)
-      // FIXME: add a nul-terminator offset seem to leead to invalid string => check why
-      val utf16SqlLen = utf16Bytes.length //+ 1 // add nul-terminator to length (see above)
+      // FIXME: the BOM is missing, since there is a bug in String.getBytes() introduced in SN v0.4.0-M2 (see https://github.com/scala-native/scala-native/issues/1669)
+      val UTF16_BE_BOM = Array(0xFE.toByte, 0xFF.toByte)
+      val fixedUtf16Bytes = UTF16_BE_BOM ++ utf16Bytes
+      val utf16Sql = CUtils.bytesToCString(fixedUtf16Bytes)(z)
+      // FIXME: add a nul-terminator offset seem to lead to invalid string => check why
+      val utf16SqlLen = fixedUtf16Bytes.length //+ 1 // add nul-terminator to length (see above)
+
+      //println("utf16Bytes: " + Bytes2Hex.convert(fixedUtf16Bytes))
+      //println("fromCString:" + fromCString(utf16Sql))
 
       if (prepFlagsOpt.isEmpty) {
         sqlite.sqlite3_prepare16_v2(db, utf16Sql, utf16SqlLen, stmtPtr, null)
@@ -588,7 +634,7 @@ class SQLiteWrapper {
     myLastReturnCode = 0
 
     //val text = sqlite.sqlite3_column_text16(stmt, column)
-    val text = sqlite.sqlite3_column_text(stmt, column).cast[Ptr[CChar]]
+    val text = sqlite.sqlite3_column_text(stmt, column).asInstanceOf[Ptr[CChar]]
     var textAsStr: String = null
 
     val rc = if (text == null) { // maybe we're out of memory
