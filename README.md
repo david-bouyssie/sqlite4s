@@ -21,7 +21,7 @@ Please note that the Job queue feature is not yet implemented in SQLite4S due to
 Regarding the Long array feature I decided it was low priority for a first implementation, but if it is an issue for your own project do not hesitate to open an issue.
 
 ## Getting started
-[![Maven Central](https://img.shields.io/maven-central/v/com.github.david-bouyssie/sqlite4s_native0.4.0-M2_2.11/0.2.0)](https://mvnrepository.com/artifact/com.github.david-bouyssie/sqlite4s_native0.4.0-M2_2.11/0.2.0)
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.david-bouyssie/sqlite4s_native0.4.0_2.11/0.3.0)](https://mvnrepository.com/artifact/com.github.david-bouyssie/sqlite4s_native0.4.0_2.11/0.3.0)
 
 If you are already familiar with Scala Native you can jump right in by adding the following dependency in your `sbt` build file.
 
