@@ -36,7 +36,7 @@ object sqlite_addons {
   object DESTRUCTOR_TYPE {
 
     @inline def castToDestructorType(dVal: Long): sqlite3_destructor_type = {
-      scala.scalanative.runtime.Boxes.boxToCFuncRawPtr(
+      scala.scalanative.runtime.Boxes.boxToCFuncPtr1(
         scala.scalanative.runtime.Intrinsics.castLongToRawPtr(dVal)
       ).asInstanceOf[sqlite3_destructor_type]
     }

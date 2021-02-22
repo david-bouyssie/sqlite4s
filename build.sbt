@@ -1,10 +1,10 @@
 name := "sqlite4s"
 organization := "com.github.david-bouyssie"
-version := "0.2.0"
+version := "0.3.0"
 scalaVersion := "2.11.12"
 
-libraryDependencies += "com.outr" %%% "scribe" % "2.7.11"
-libraryDependencies += "com.lihaoyi" %%% "utest" % "0.7.4" % "test"
+libraryDependencies += "com.outr" %%% "scribe" % "3.3.3"
+libraryDependencies += "com.lihaoyi" %%% "utest" % "0.7.7" % "test"
 
 testFrameworks += new TestFramework("utest.runner.Framework")
 
@@ -14,10 +14,10 @@ enablePlugins(ScalaNativePlugin)
 nativeLinkStubs := true
 
 nativeMode := "release"
-nativeLTO := "thin" // will be available in 0.4.0
+nativeLTO := "thin"
 
 // Your profile name of the sonatype account. The default is the same with the organization value
-sonatypeProfileName := "david-bouyssie"
+//sonatypeProfileName := "david-bouyssie"
 
 scmInfo := Some(
   ScmInfo(
@@ -48,9 +48,12 @@ publishTo := {
 // Workaround for issue https://github.com/sbt/sbt/issues/3570 (fixed in 1.3.x)
 //updateOptions := updateOptions.value.withGigahorse(false)
 
-useGpg := true
-pgpPublicRing := file("~/.gnupg/pubring.kbx")
-pgpSecretRing := file("~/.gnupg/pubring.kbx")
+// To publish to central:
+// export GPG_TTY=$(tty) # gpg issue (https://github.com/keybase/keybase-issues/issues/2798)
+// sbt publishSigned
+//useGpg := true // (since 2.0.0): useGpg is true by default
+//pgpPublicRing := file("~/.gnupg/pubring.kbx")
+//pgpSecretRing := file("~/.gnupg/pubring.kbx")
 Test / skip in publish := true
 
 /*

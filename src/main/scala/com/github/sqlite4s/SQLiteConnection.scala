@@ -702,7 +702,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
       val from = if (profiler == null) 0
       else System.nanoTime
       val sqlString = sql.toString()
-      if (sqlString.trim.length == 0) throw new SQLiteException(WRAPPER_USER_ERROR, "empty SQL")
+      if (sqlString.trim.isEmpty) throw new SQLiteException(WRAPPER_USER_ERROR, "empty SQL")
       stmt = mySQLiteWrapper.sqlite3PrepareV3(handle, sqlString, flags)
       val rc = mySQLiteWrapper.getLastReturnCode()
       if (profiler != null) profiler.reportPrepare(sqlString, from, System.nanoTime, rc)
@@ -1625,7 +1625,9 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
 
   @throws[SQLiteException]
   private def open0(flags: Int): Unit = {
-    logger.trace(mkLogMessage(s"opening (0x${Integer.toHexString(flags).toUpperCase(Locale.US)})"))
+    // FIXME: use java.util.Locale when available in SN javalib
+    //logger.trace(mkLogMessage(s"opening (0x${Integer.toHexString(flags).toUpperCase(Locale.US)})"))
+    logger.trace(mkLogMessage(s"opening (0x${Integer.toHexString(flags).toUpperCase()})"))
 
     var handle: SQLiteConnection.Handle = null
     myLock synchronized {

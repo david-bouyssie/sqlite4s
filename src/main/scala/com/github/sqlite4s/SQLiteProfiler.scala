@@ -45,6 +45,8 @@ object SQLiteProfiler {
     case x              => x.asInstanceOf[AnyRef]
   }*/
 
+// FIXME: use implementations based on java.util.Locale when available in SN javalib
+  /*
   @inline
   private def formatStr(l: Locale, format: String, args: Any*) = {
     //java.lang.String.format(l, format, args map unwrapArg: _*)
@@ -57,6 +59,19 @@ object SQLiteProfiler {
     else if (nanos > 10000000L) formatStr(Locale.US, "%.1fms", nanos.toDouble / 1000000.0)
     else if (nanos > 100000L) formatStr(Locale.US, "%.2fms", nanos.toDouble / 1000000.0)
     else formatStr(Locale.US, "%.2fµs", nanos.toDouble / 1000.0)
+  }*/
+
+  private def formatStr(format: String, args: Any*) = {
+    //java.lang.String.format(l, format, args map unwrapArg: _*)
+    format.format(args: _*)
+  }
+
+  private def formatDuration(nanos: Long): String = {
+    if (nanos > 1000000000L) formatStr("%.1fs", nanos.toDouble / 1000000000.0)
+    else if (nanos > 100000000L) formatStr("%dms", nanos / 1000000L)
+    else if (nanos > 10000000L) formatStr("%.1fms", nanos.toDouble / 1000000.0)
+    else if (nanos > 100000L) formatStr("%.2fms", nanos.toDouble / 1000000.0)
+    else formatStr("%.2fµs", nanos.toDouble / 1000.0)
   }
 
   private class SQLStat(val mySQL: String) {

@@ -49,6 +49,16 @@ object Logging {
     )
 
     if (scribeMinLogLevelOpt.isDefined) {
+      logger.replace()
+    } else {
+      logger.withModifier(
+        select(packageName.startsWith(namespace))
+          .exclude(level <= Level.Error)
+          .priority(Priority.High)
+      ).replace()
+    }
+
+    /*if (scribeMinLogLevelOpt.isDefined) {
       logger.withModifier(
         select(packageName.startsWith(namespace))
           .exclude(level < scribeMinLogLevelOpt.get)
@@ -60,7 +70,7 @@ object Logging {
           .exclude(level <= Level.Error)
           .priority(Priority.High)
       ).replace()
-    }
+    }*/
 
   }
 

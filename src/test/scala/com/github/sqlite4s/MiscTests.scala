@@ -40,7 +40,9 @@ object MiscTests extends SQLiteTestFixture {
       fail("created a connection to db in a non-existing directory")
     } catch {
       case e: SQLiteException =>
-        assert(e.getMessage.toLowerCase(java.util.Locale.US).contains("file"))
+        // FIXME: use java.util.Locale when available in SN javalib
+        //assert(e.getMessage.toLowerCase(java.util.Locale.US).contains("file"))
+        assert(e.getMessage.toLowerCase().contains("file"))
     }
   }
 

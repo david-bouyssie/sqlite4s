@@ -147,14 +147,12 @@ abstract class SQLiteTestFixture() extends TestSuite with Logging {
 
     //val dir = File.createTempFile(dirName)
     val dir = new File(s"./target/tests/$dirName").getCanonicalFile
-    var success = true
     if (dir.isDirectory) {
-      var success = dir.delete
-      assert(success, dir)
+      assert(dir.delete, "can't delete directory: "+ dir)
     }
 
-    success = dir.mkdirs
-    assert(success, dir)
+    assert(dir.mkdirs, "can't create directory: "+ dir)
+
     myTempDir = dir
   }
 

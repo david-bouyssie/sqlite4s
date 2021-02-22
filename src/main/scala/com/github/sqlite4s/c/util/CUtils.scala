@@ -18,7 +18,8 @@ package com.github.sqlite4s.c.util
 
 import java.nio.charset.Charset
 
-import scala.scalanative.runtime.{ Array => CArray, _ }
+import scala.language.implicitConversions
+import scala.scalanative.runtime.{Array => CArray, _}
 import scala.scalanative.libc._
 import scala.scalanative.libc.string.strstr
 import scala.scalanative.unsafe._
@@ -28,12 +29,13 @@ object CUtils {
 
   // Alias string as libc
   // TODO: remove this alias when we upgrade the SN dependency
-  val libc = string
+  private val libc = string
 
   final val EMPTY_STRING = ""
   final val NULL_BYTE = 0.toByte //new java.lang.Character(0x0).charValue.toByte
   final val NULL_CHAR: CChar = NULL_BYTE
   final val ZERO_ASCII_CODE = 48
+  private val ZERO_CSIZE: CSize = 0L.toULong
 
   def substr_idx(c_str: CString, c_sub_str: CString): Long = {
     val found_str = strstr(c_str, c_sub_str) // get the start pointer of substring
@@ -51,7 +53,7 @@ object CUtils {
   }
 
   @inline def bytes2ByteArray(bytes: Ptr[Byte], len: CSize): Array[Byte] = {
-    if (len == 0) return Array()
+    if (len == ZERO_CSIZE) return Array()
 
     val byteArray = ByteArray.alloc(len.toInt) // allocate memory
     val byteArrayPtr = byteArray.at(0)
@@ -71,7 +73,7 @@ object CUtils {
     val arr = DoubleArray.alloc(len)
     val dst = arr.at(0).asInstanceOf[Ptr[Byte]]
     val src = doubles.asInstanceOf[Ptr[Byte]]
-    val size = sizeof[CDouble] * len
+    val size = sizeof[CDouble] * len.toULong
 
     libc.memcpy(dst, src, size)
 
@@ -108,7 +110,7 @@ object CUtils {
     val arr  = FloatArray.alloc(len)
     val dst  = arr.at(0).asInstanceOf[Ptr[Byte]]
     val src  = floats.asInstanceOf[Ptr[Byte]]
-    val size = sizeof[CFloat] * len
+    val size = sizeof[CFloat] * len.toULong
 
     libc.memcpy(dst, src, size)
 
@@ -124,7 +126,7 @@ object CUtils {
 
   def fromCString(cstr: CString, len: CSize, charset: Charset = Charset.defaultCharset()): String = {
     if (cstr == null) return null
-    if (len == 0) return EMPTY_STRING
+    if (len == ZERO_CSIZE) return EMPTY_STRING
 
     /*val bytes = new Array[Byte](len)
 
@@ -142,19 +144,18 @@ object CUtils {
     if (bytes == null) return null
 
     val nBytes = bytes.length
-    val cstr = z.alloc(nBytes + 1)
+    val cstr = z.alloc( (nBytes + 1).toULong )
 
-    var c = 0
+    /*var c = 0
     while (c < nBytes) {
-      !(cstr + c) = bytes(c)
+      cstr.update(c, bytes(c))
       c += 1
     }
-    !(cstr + c) = NULL_CHAR
+    cstr.update(c, NULL_CHAR)*/
 
-    // TODO: find a way to cast bytes to a bytesPtr and then use CUtils.strcpy?
-    /*val bytesPtr = bytes.cast[Ptr[Byte]]//.at(0)
-    libc.memcpy(cstr, bytesPtr, nBytes)
-    cstr(nBytes) = NULL_CHAR*/
+    val bytesPtr = bytes.asInstanceOf[ByteArray].at(0)
+    libc.memcpy(cstr, bytesPtr, nBytes.toULong)
+    cstr(nBytes) = NULL_CHAR
 
     cstr
   }
