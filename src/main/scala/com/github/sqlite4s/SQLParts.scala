@@ -19,7 +19,7 @@ package com.github.sqlite4s
 
 import java.util.{ArrayList, Collections}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 /**
   * SQLParts is a means to avoid excessive garbage production during String concatenation when SQL
@@ -107,7 +107,7 @@ final class SQLParts(
   private def calcHash(): Int = {
     var r = 0
 
-    for (myPart <- myParts) {
+    for (myPart <- myParts.iterator.asScala) {
       r = 31 * r + myPart.hashCode
     }
 
@@ -252,7 +252,7 @@ final class SQLParts(
     */
   override def toString(): String = {
     if (mySql == null) {
-      mySql = myParts.mkString
+      mySql = myParts.iterator.asScala.mkString
       /*val builder = new java.lang.StringBuilder()
       myParts.foreach { myPart =>
         builder.append(myPart)
