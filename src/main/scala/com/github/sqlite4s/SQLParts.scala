@@ -253,11 +253,6 @@ final class SQLParts(
   override def toString(): String = {
     if (mySql == null) {
       mySql = myParts.iterator.asScala.mkString
-      /*val builder = new java.lang.StringBuilder()
-      myParts.foreach { myPart =>
-        builder.append(myPart)
-      }
-      mySql = builder.toString*/
     }
 
     mySql

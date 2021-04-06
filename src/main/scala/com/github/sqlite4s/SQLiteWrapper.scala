@@ -248,7 +248,7 @@ object SQLiteWrapper {
 
     if (valueLen > 0) {
       /*val encodedCharsAsBytes = value.getBytes(UTF8_CHARSET)
-      // TODO: try to understand why the doc explains to add null-terminator for prepare call and not for bind call
+      // TODO: try to understand why the doc explains to add nul-terminator for prepare call and not for bind call
       utf8StrNulTermOffset = encodedCharsAsBytes.length + 1
       //println("utf16StrNulTermOffset: " + utf16StrNulTermOffset)
 
@@ -572,8 +572,8 @@ class SQLiteWrapper {
       // that is the number of bytes in the input string including the nul-terminator.
       val utf16Bytes = sql.getBytes(SQLiteWrapper.UTF16_CHARSET)
       val utf16Sql = CUtils.bytesToCString(utf16Bytes)(z)
-      // FIXME: adding a null-terminator offset seems to lead to invalid string => check why
-      val utf16SqlLen = utf16Bytes.length //+ 1 // add null-terminator to length (see above)
+      // FIXME: adding a nul-terminator offset seems to lead to invalid string => check why
+      val utf16SqlLen = utf16Bytes.length //+ 1 // add nul-terminator to length (see above)
 
       //println("utf16Bytes: " + Bytes2Hex.convert(fixedUtf16Bytes))
       //println("fromCString:" + fromCString(utf16Sql))

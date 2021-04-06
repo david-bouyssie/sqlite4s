@@ -183,7 +183,7 @@ object SQLiteProfiler {
 
 class SQLiteProfiler extends Logging {
 
-  final private val myStats = new java.util.HashMap[String, SQLiteProfiler.SQLStat]()
+  final private val myStats = new collection.mutable.HashMap[String, SQLiteProfiler.SQLStat]()
 
   /**
     * Outputs current report into PrintWriter.
@@ -191,13 +191,7 @@ class SQLiteProfiler extends Logging {
     * @param out report writer
     */
   def printReport(out: PrintWriter): Unit = {
-    val stats: ArrayList[SQLiteProfiler.SQLStat] = new java.util.ArrayList(myStats.values)
-    Collections.sort(stats, new Comparator[SQLiteProfiler.SQLStat]() {
-      def compare(o1: SQLiteProfiler.SQLStat, o2: SQLiteProfiler.SQLStat): Int = if (o1.getTotalTime < o2.getTotalTime) 1
-      else -1
-    })
-
-    for (stat <- stats.iterator.asScala) {
+    myStats.values.toList.sortBy(_.getTotalTime()).foreach { stat =>
       stat.printReport(out)
     }
   }
@@ -290,12 +284,7 @@ class SQLiteProfiler extends Logging {
   }
 
   private def getStat(sql: String): SQLiteProfiler.SQLStat = {
-    var stat = myStats.get(sql)
-    if (stat == null) {
-      stat = new SQLiteProfiler.SQLStat(sql)
-      myStats.put(sql, stat)
-    }
-    stat
+    myStats.getOrElseUpdate(sql, new SQLiteProfiler.SQLStat(sql))
   }
 }
 

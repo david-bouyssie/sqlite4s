@@ -1,8 +1,8 @@
 name := "sqlite4s"
 organization := "com.github.david-bouyssie"
-version := "0.3.0"
+version := "0.4.0"
 scalaVersion := "2.11.12"
-crossScalaVersions := Seq("2.13.4", "2.12.13", "2.11.12")
+crossScalaVersions := Seq("2.13.5", "2.12.13", "2.11.12")
 
 libraryDependencies += "com.outr" %%% "scribe" % "3.3.3"
 libraryDependencies += "com.lihaoyi" %%% "utest" % "0.7.7" % "test"
@@ -14,7 +14,7 @@ enablePlugins(ScalaNativePlugin)
 // Set to false or remove if you want to show stubs as linking errors
 nativeLinkStubs := true
 
-nativeMode := "release"
+nativeMode := "release-fast"
 nativeLTO := "thin"
 
 // Your profile name of the sonatype account. The default is the same with the organization value
