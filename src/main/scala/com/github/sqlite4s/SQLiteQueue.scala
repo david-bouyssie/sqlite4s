@@ -648,8 +648,8 @@ class SQLiteQueue(
 
   private def cancelJobs(jobs: java.util.List[SQLiteJob[_]]): Unit = {
     if (jobs != null) {
-      import scala.collection.JavaConversions._
-      for (job <- jobs) {
+      import scala.collection.JavaConverters._
+      for (job <- jobs.iterator.asScala) {
         job.cancel(true)
       }
     }

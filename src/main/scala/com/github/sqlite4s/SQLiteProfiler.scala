@@ -20,7 +20,7 @@ package com.github.sqlite4s
 import java.io._
 import java.util._
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 import bindings.sqlite.SQLITE_CONSTANT._
 
@@ -113,10 +113,9 @@ object SQLiteProfiler {
       b.append(formatDuration(getTotalTime()))
       out.println(b.toString)
 
-      for (e <- myStats.entrySet) {
+      for ((key, stat) <- myStats) {
         b.setLength(0)
-        addLeftColumn(b, e.getKey, maxPrefix)
-        val stat = e.getValue
+        addLeftColumn(b, key, maxPrefix)
         b.append("total:").append(formatDuration(stat.getTotalNanos())).append(' ')
         b.append("count:").append(stat.getTotalCount()).append(' ')
         b.append("min|avg|max:").append(formatDuration(stat.getMinNanos())).append('|').append(formatDuration(stat.getAvgNanos())).append('|').append(formatDuration(stat.getMaxNanos)).append(' ')
@@ -198,7 +197,7 @@ class SQLiteProfiler extends Logging {
       else -1
     })
 
-    for (stat <- stats) {
+    for (stat <- stats.iterator.asScala) {
       stat.printReport(out)
     }
   }
