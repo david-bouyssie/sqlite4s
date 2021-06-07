@@ -2,7 +2,7 @@
 
 SQLite4S is a port of the Java library [Sqlite4java](https://bitbucket.org/almworks/sqlite4java) for the Scala Native platform.
 
-The goal of this project is to provide a thin wrapper around the SQLite C library with an API similar to the Sqlite4java one. Since JNI is not needed anymore thanks to Scala Native, SQLite4S should have a lower overhead compared to the Sqlite4ava wrapper. However performance comparison has not been done yet.
+The goal of this project is to provide a thin wrapper around the SQLite C library with an API similar to the Sqlite4java one. Since JNI is not needed anymore thanks to Scala Native, SQLite4S should have a lower overhead compared to the Sqlite4java wrapper. However performance comparison has not been done yet.
 
 # Supported Sqlite4java features
 
