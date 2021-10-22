@@ -2,7 +2,7 @@ name := "sqlite4s"
 organization := "com.github.david-bouyssie"
 version := "0.4.1"
 scalaVersion := "2.13.6"
-crossScalaVersions := Seq("2.13.6", "2.12.15", "2.11.12")
+crossScalaVersions := Seq("2.13.6", "2.12.15") // , "2.11.12"
 
 libraryDependencies += "com.outr" %%% "scribe" % "3.6.1"
 libraryDependencies += "com.lihaoyi" %%% "utest" % "0.7.10" % "test"
