@@ -185,7 +185,7 @@ class SQLiteQueue(
         logger.warn(Internal.mkLogMessage(this.toString(), if (myStopRequested) "stopped" else "already started"))
         return this
       }
-      logger.trace(Internal.mkLogMessage(this.toString(), "starting"))
+      if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), "starting"))
       thread = myThreadFactory.newThread(new Runnable() {
         def run(): Unit = {
           runQueue()
@@ -232,14 +232,14 @@ class SQLiteQueue(
     myLock synchronized {
       if (!gracefully) {
         if (!myStopRequired && myStopRequested)
-          logger.trace(Internal.mkLogMessage(this.toString(), "now stopping non-gracefully"))
+          if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), "now stopping non-gracefully"))
 
         myStopRequired = true
       }
       if (myStopRequested) { // already stopping
         return this
       }
-      logger.trace(Internal.mkLogMessage(this.toString(), if (gracefully) "stopping gracefully" else "stopping non-gracefully"))
+      if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), if (gracefully) "stopping gracefully" else "stopping non-gracefully"))
 
       myStopRequested = true
       if (myStopRequired) currentJob = myCurrentJob
@@ -264,7 +264,7 @@ class SQLiteQueue(
     */
   @throws[InterruptedException]
   def join(): SQLiteQueue = {
-    logger.trace(Internal.mkLogMessage(this.toString(),"waiting for queue to stop"))
+    if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(),"waiting for queue to stop"))
     val thread = myThread
     if (thread == Thread.currentThread) throw new IllegalStateException()
     if (thread != null) thread.join()
@@ -300,11 +300,11 @@ class SQLiteQueue(
     var cancel = false
     myLock synchronized {
       if (myStopRequested) {
-        logger.trace(Internal.mkLogMessage(this.toString(),s"job not executed: $job"))
+        if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(),s"job not executed: $job"))
         cancel = true
       }
       else {
-        logger.trace(Internal.mkLogMessage(this.toString(),s"queueing $job"))
+        if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(),s"queueing $job"))
         addJob(job)
         myLock.notify()
       }
@@ -432,7 +432,7 @@ class SQLiteQueue(
   @throws[SQLiteException]
   protected def openConnection(): SQLiteConnection = {
     val connection = new SQLiteConnection(myDatabaseFile)
-    logger.trace(Internal.mkLogMessage(this.toString(), s"opening $connection"))
+    if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), s"opening $connection"))
     try
       connection.open()
     catch {
@@ -463,7 +463,7 @@ class SQLiteQueue(
   protected def disposeConnection(connection: SQLiteConnection): Unit = {
     try {
       if (connection != null) {
-        logger.trace(Internal.mkLogMessage(this.toString(), s"disposing $connection"))
+        if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), s"disposing $connection"))
         connection.dispose()
       }
     }
@@ -478,7 +478,7 @@ class SQLiteQueue(
     * job is cancelled. Override to change how to handle these two situations.
     */
   protected def rollback(): Unit = {
-    logger.trace(Internal.mkLogMessage(this.toString(), "rolling back transaction"))
+    if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), "rolling back transaction"))
     try
       myConnection.exec("ROLLBACK")
     catch {
@@ -499,10 +499,10 @@ class SQLiteQueue(
     val connection = myConnection
     if (connection == null) throw new IllegalStateException(this + ": executeJob: no connection")
     try {
-      logger.trace(Internal.mkLogMessage(this.toString(), s"executing $job"))
+      if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), s"executing $job"))
       job.execute(connection, this)
       afterExecute(job)
-      logger.trace(Internal.mkLogMessage(this.toString(), s"finished executing $job"))
+      if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), s"finished executing $job"))
     } catch {
       case e: Throwable =>
         handleJobException(job, e)
@@ -610,7 +610,7 @@ class SQLiteQueue(
 
   @throws[Throwable]
   private def queueFunction(): Unit = {
-    logger.trace(Internal.mkLogMessage(this.toString(), "started"))
+    if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), "started"))
 
     disposeConnection(myConnection)
     myConnection = null
@@ -627,7 +627,7 @@ class SQLiteQueue(
 
         while (job == null) {
           if (myStopRequested && (myStopRequired || isJobQueueEmpty)) {
-            logger.trace(Internal.mkLogMessage(this.toString(), "thread exiting"))
+            if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), "thread exiting"))
             return
           }
 
@@ -677,7 +677,7 @@ class SQLiteQueue(
     if (!reincarnate) {
       cancelJobs(droppedJobs)
 
-      logger.trace(Internal.mkLogMessage(this.toString(), "stopped"))
+      if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), "stopped"))
     }
     else this.reincarnate(getReincarnationTimeout)
   }

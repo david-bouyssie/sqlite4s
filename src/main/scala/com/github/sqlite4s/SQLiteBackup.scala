@@ -20,7 +20,7 @@ package com.github.sqlite4s
 import scala.scalanative.unsafe._
 
 import bindings.sqlite
-import bindings.sqlite.SQLITE_CONSTANT.SQLITE_DONE
+import bindings.sqlite.SQLITE_CONSTANT._
 import SQLITE_WRAPPER_ERROR_CODE.WRAPPER_BACKUP_DISPOSED
 
 object SQLiteBackup {
@@ -76,7 +76,7 @@ class SQLiteBackup private[sqlite4s](
 
 ) extends Logging {
 
-  logger.trace(Internal.mkLogMessage(this.toString(), "instantiated"))
+  if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), "instantiated"))
 
   /**
     * If true, last call to sqlite3_backup_step() returned SQLITE_DONE
@@ -118,12 +118,13 @@ class SQLiteBackup private[sqlite4s](
       return true
     }
 
-    logger.trace(Internal.mkLogMessage(this.toString(), s"backupStep($pagesToBackup)"))
+    if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), s"backupStep($pagesToBackup)"))
 
     val rc = sqlite.sqlite3_backup_step(_getHandleOrFail(), pagesToBackup)
-    throwResult(rc, "backupStep failed")
-    if (rc == SQLITE_DONE) {
-      logger.trace(Internal.mkLogMessage(this.toString(), "finished"))
+    if (rc != SQLITE_DONE) {
+      if (rc != SQLITE_OK) myDestination.throwResult(rc, "backupStep failed")
+    } else {
+      if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), "finished"))
       myFinished = true
     }
 
@@ -170,7 +171,7 @@ class SQLiteBackup private[sqlite4s](
         )
         return
     }
-    logger.trace(Internal.mkLogMessage(this.toString(), "disposing"))
+    if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), "disposing"))
 
     val handle = myHandle
     if (handle != null) {
@@ -223,12 +224,6 @@ class SQLiteBackup private[sqlite4s](
   }
 
   override def toString(): String = s"Backup [$mySource -> $myDestination]"
-
-  @throws[SQLiteException]
-  private def throwResult(rc: Int, operation: String): Unit = {
-    if (rc == SQLITE_DONE) return
-    myDestination.throwResult(rc, operation)
-  }
 
 }
 

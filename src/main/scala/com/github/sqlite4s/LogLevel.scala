@@ -3,6 +3,7 @@ package com.github.sqlite4s
 sealed abstract class LogLevel {
   def value: Int
   @inline final def >=(other: LogLevel): Boolean = this.value >= other.value
+  @inline final def <=(other: LogLevel): Boolean = this.value <= other.value
 }
 
 object LogLevel  {

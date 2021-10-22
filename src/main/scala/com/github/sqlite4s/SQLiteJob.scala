@@ -221,7 +221,7 @@ abstract class SQLiteJob[T] extends Future[T] with Logging { // <: AnyRef
 
     if (connection != null) {
 
-      logger.trace(Internal.mkLogMessage(this.toString,"interrupting"))
+      if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString,"interrupting"))
 
       try
         connection.interrupt()
@@ -231,7 +231,7 @@ abstract class SQLiteJob[T] extends Future[T] with Logging { // <: AnyRef
       }
     }
     else {
-      logger.trace(Internal.mkLogMessage(this.toString(),"cancelling"))
+      if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(),"cancelling"))
 
       // job never ran
       finishJob(null.asInstanceOf[T])
@@ -387,7 +387,7 @@ abstract class SQLiteJob[T] extends Future[T] with Logging { // <: AnyRef
       myConnection = connection
       myQueue = queue
     }
-    logger.trace(Internal.mkLogMessage(this.toString(),"started"))
+    if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(),"started"))
 
     try jobStarted(connection)
     catch {
@@ -402,7 +402,7 @@ abstract class SQLiteJob[T] extends Future[T] with Logging { // <: AnyRef
     myLock synchronized {
       if (e.isInstanceOf[SQLiteInterruptedException]) {
         myState = SQLiteJob.CANCELLED
-        logger.trace(Internal.mkLogMessage(this.toString(),"cancelled"), e)
+        if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(),"cancelled"), e)
       }
       else {
         logger.warn(Internal.mkLogMessage(this.toString(),"job exception"), e)
@@ -455,6 +455,6 @@ abstract class SQLiteJob[T] extends Future[T] with Logging { // <: AnyRef
       myLock.notifyAll()
     }
 
-    logger.trace(Internal.mkLogMessage(this.toString(),"finished"))
+    if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(),"finished"))
   }
 }

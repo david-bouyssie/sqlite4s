@@ -222,7 +222,7 @@ object SQLiteStatementTests extends SQLiteConnectionFixture {
     assert(st.hasBindings)
     st = null
     System.gc()
-    Thread.sleep(500)
+    Thread.sleep(100)
     System.gc()
     st = connection.prepare("select x + ? from x")
     assert(!st.hasRow)

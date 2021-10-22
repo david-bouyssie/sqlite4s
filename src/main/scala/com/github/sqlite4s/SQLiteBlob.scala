@@ -22,6 +22,7 @@ import scala.scalanative.unsafe._
 import Internal._
 import SQLITE_WRAPPER_ERROR_CODE._
 import com.github.sqlite4s.bindings.sqlite
+import sqlite.SQLITE_CONSTANT._
 
 object SQLiteBlob {
 
@@ -135,7 +136,7 @@ final class SQLiteBlob private(
         SQLiteException.logWarnOrThrowError(msg => logger.warn(msg), "invalid dispose: " + e, true)
         return
     }
-    logger.trace(mkLogMessage("disposing"))
+    if (canLogTrace) logger.trace(mkLogMessage("disposing"))
 
     myController.dispose(this)
 
@@ -172,10 +173,10 @@ final class SQLiteBlob private(
 
     myController.validate()
 
-    logger.trace(mkLogMessage(s"read[$blobOffset,$length]"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"read[$blobOffset,$length]"))
 
     val rc = SQLiteWrapper.sqlite3BlobRead(_getHandleOrFail(), blobOffset, buffer, offset, length)
-    myController.throwResult(rc, "read", this)
+    if (rc != SQLITE_OK) myController.throwResult(rc, "read", this)
   }
 
   /**
@@ -208,11 +209,10 @@ final class SQLiteBlob private(
 
     myController.validate()
 
-    logger.trace(mkLogMessage(s"write[$blobOffset,$length]"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"write[$blobOffset,$length]"))
 
     val rc = sqlite.sqlite3_blob_write(_getHandleOrFail(), newBufferPtr, length, blobOffset)
-
-    myController.throwResult(rc, "write", this)
+    if (rc != SQLITE_OK) myController.throwResult(rc, "write", this)
   }
 
   /**
@@ -233,10 +233,10 @@ final class SQLiteBlob private(
   def reopen(rowid: Long): Unit = {
     myController.validate()
 
-    logger.trace(mkLogMessage("reopen[" + rowid + "]"))
+    if (canLogTrace) logger.trace(mkLogMessage("reopen[" + rowid + "]"))
 
     val rc = sqlite.sqlite3_blob_reopen(_getHandleOrFail(), rowid)
-    myController.throwResult(rc, "reopen", this)
+    if (rc != SQLITE_OK) myController.throwResult(rc, "reopen", this)
 
     // If no error => reset size and update name with new rowid
     _blobLength = -1
@@ -249,7 +249,7 @@ final class SQLiteBlob private(
   protected[sqlite4s] def clear(): Unit = {
     myHandle = null
     myController = SQLiteController.getDisposed(myController)
-    logger.trace(mkLogMessage("cleared"))
+    if (canLogTrace) logger.trace(mkLogMessage("cleared"))
   }
 
   // TODO: DBO => avoid to overriding toString and implement proper toErrorString() or toQualifiedName() method

@@ -97,7 +97,7 @@ object SQLiteConnection {
   * @param dbfile database file, or null to create an in-memory database
   */
 final class SQLiteConnection(val dbfile: File) extends Logging {
-  logger.info(mkLogMessage(this.toString(), s"instantiated [$dbfile]"))
+  if (canLogInfo) logger.info(mkLogMessage(this.toString(), s"instantiated [$dbfile]"))
 
   /**
     * An incremental number of the instance, used for debugging purposes.
@@ -392,7 +392,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
   @throws[SQLiteException]
   def isReadOnly(dbName: String): Boolean = {
     checkThread()
-    logger.trace(mkLogMessage(s"calling sqlite3_db_readonly [$dbName]"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"calling sqlite3_db_readonly [$dbName]"))
 
     val realDbName = dbName //if (dbName == null) "main" else dbName
     val result = Zone { implicit z =>
@@ -418,9 +418,9 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
   @throws[SQLiteException]
   def flush(): Unit = {
     checkThread()
-    logger.trace(mkLogMessage("calling sqlite3_db_cacheflush() via flush()"))
+    if (canLogTrace) logger.trace(mkLogMessage("calling sqlite3_db_cacheflush() via flush()"))
     val result = sqlite.sqlite3_db_cacheflush(handle)
-    throwResult(result, "flush()")
+    if (result != SQLITE_OK) throwResult(result, "flush()")
   }
 
   /**
@@ -509,7 +509,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
 
     if (handle == null) return
 
-    logger.trace(mkLogMessage("disposing"))
+    if (canLogTrace) logger.trace(mkLogMessage("disposing"))
     finalizeStatements()
     finalizeBlobs()
 
@@ -553,7 +553,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
   def exec(sql: String): SQLiteConnection = {
     checkThread()
     val profiler = myProfiler
-    logger.trace(mkLogMessage(s"exec [$sql]"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"exec [$sql]"))
     val handle = this.handle()
 
     // FIXME: DBO => do we really need this?what is the associated overhead?
@@ -567,9 +567,9 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
 
       if (profiler != null) profiler.reportExec(sql, from, System.nanoTime, rc)
 
-      throwResult(rc, "exec()", errorOpt.orNull)
+      if (rc != SQLITE_OK) throwResult(rc, "exec()", errorOpt.orNull)
     } finally {
-      logger.trace(mkLogMessage(s"exec [$sql]"))
+      if (canLogTrace) logger.trace(mkLogMessage(s"exec [$sql]"))
       //---//if (SQLiteException.isFineLogging) SQLiteException.logFine(this, "exec [" + sql + "]: " + ph.getSteps + " steps")
       ph.reset()
     }
@@ -610,7 +610,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
   @throws[SQLiteException]
   def getTableColumnMetadata(dbName: String, tableName: String, columnName: String): SQLiteColumnMetadata = {
     checkThread()
-    logger.trace(mkLogMessage(s"calling sqlite3_table_column_metadata [$dbName,$tableName,$columnName]"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"calling sqlite3_table_column_metadata [$dbName,$tableName,$columnName]"))
 
     SQLiteWrapper.sqlite3TableColumnMetadata(this.handle(), dbName, tableName, columnName)
   }
@@ -645,7 +645,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
 //println("begin")
     checkThread()
 //var z = 0
-    logger.trace(mkLogMessage(s"prepare [$sql]"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"prepare [$sql]"))
 //println(z); z += 1
     val profiler = myProfiler
     var handle: SQLiteConnection.Handle = null
@@ -698,7 +698,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
     }
 //    println(z); z += 1
     if (stmt == null) {
-      logger.trace(mkLogMessage(s"calling sqlite3_prepare_v2 for [$sql]"))
+      if (canLogTrace) logger.trace(mkLogMessage(s"calling sqlite3_prepare_v2 for [$sql]"))
       val from = if (profiler == null) 0
       else System.nanoTime
       val sqlString = sql.toString()
@@ -706,10 +706,10 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
       stmt = mySQLiteWrapper.sqlite3PrepareV3(handle, sqlString, flags)
       val rc = mySQLiteWrapper.getLastReturnCode()
       if (profiler != null) profiler.reportPrepare(sqlString, from, System.nanoTime, rc)
-      throwResult(rc, "prepare()", sql)
+      if (rc != SQLITE_OK) throwResult(rc, "prepare()", sql)
       if (stmt == null) throw new SQLiteException(WRAPPER_WEIRD, "sqlite did not return stmt")
     }
-    else logger.trace(mkLogMessage(s"using cached stmt for [$sql]"))
+    else if (canLogTrace) logger.trace(mkLogMessage(s"using cached stmt for [$sql]"))
 //    println(z); z += 1
     var statement: SQLiteStatement = null
     myLock synchronized { // the connection may close while prepare in progress
@@ -725,9 +725,10 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
     }
 //    println(z); z += 1
     if (statement == null) { // connection closed
-      try
-        throwResult(sqlite.sqlite3_finalize(stmt), "finalize() in prepare()")
-      catch {
+      try {
+        val rc = sqlite.sqlite3_finalize(stmt)
+        if (rc != SQLITE_OK) throwResult(rc, "finalize() in prepare()")
+      } catch {
         case e: Exception => // ignore
       }
       throw new SQLiteException(WRAPPER_NOT_OPENED, "connection disposed")
@@ -838,10 +839,11 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
   def blob(dbname: String, table: String, column: String, rowid: Long, writeAccess: Boolean): SQLiteBlob = {
     checkThread()
 
-    logger.trace(mkLogMessage(s"openBlob [$dbname,$table,$column,$rowid,$writeAccess]"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"openBlob [$dbname,$table,$column,$rowid,$writeAccess]"))
     val handle = this.handle()
     val blob = mySQLiteWrapper.sqlite3BlobOpen(handle, dbname, table, column, rowid, writeAccess)
-    throwResult(mySQLiteWrapper.getLastReturnCode(), "openBlob()", null)
+    val lastRC = mySQLiteWrapper.getLastReturnCode()
+    if (lastRC != SQLITE_OK) throwResult(lastRC, "openBlob()", null)
 
     if (blob == null) throw new SQLiteException(WRAPPER_WEIRD, "sqlite did not return blob")
 
@@ -856,9 +858,10 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
     }
 
     if (result == null) {
-      try
-        throwResult(sqlite.sqlite3_blob_close(blob), "blob_close() in prepare()")
-      catch {
+      try {
+        val rc = sqlite.sqlite3_blob_close(blob)
+        if (rc != SQLITE_OK) throwResult(rc, "blob_close() in prepare()")
+      } catch {
         case e: Exception => // ignor
       }
       throw new SQLiteException(WRAPPER_NOT_OPENED, "connection disposed")
@@ -898,7 +901,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
   def setBusyTimeout(millis: Long): SQLiteConnection = {
     checkThread()
     val rc = sqlite.sqlite3_busy_timeout(handle, millis.toInt)
-    throwResult(rc, "setBusyTimeout")
+    if (rc != SQLITE_OK) throwResult(rc, "setBusyTimeout")
     this
   }
 
@@ -1146,7 +1149,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
     checkThread()
 
     val destination = new SQLiteConnection(destinationDbFile).openV2(flags)
-    logger.trace(Internal.mkLogMessage(this.toString(), "initializeBackup to " + destination))
+    if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), "initializeBackup to " + destination))
 
     val sourceDb = handle()
     val destinationDb = destination.handle()
@@ -1163,7 +1166,8 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
       if (backup == null) {
         try {
           val errorCode = destination.getErrorCode()
-          destination.throwResult(errorCode, "backup initialization")
+          if (errorCode != SQLITE_OK)
+            destination.throwResult(errorCode, "backup initialization")
           throw new SQLiteException(SQLITE_WRAPPER_ERROR_CODE.WRAPPER_WEIRD, "backup failed to start but error code is 0")
         } finally destination.dispose()
       }
@@ -1202,9 +1206,8 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
   @throws[SQLiteException]
   def setExtensionLoadingEnabled(enabled: Boolean): Unit = {
     checkThread()
-    val rc = sqlite.sqlite3_enable_load_extension(handle, if (enabled) 1
-    else 0)
-    throwResult(rc, "enableLoadExtension()")
+    val rc = sqlite.sqlite3_enable_load_extension(handle, if (enabled) 1 else 0)
+    if (rc != SQLITE_OK) throwResult(rc, "enableLoadExtension()")
     if (Internal.isFineLogging) Internal.logFine(this, if (enabled) "Extension load enabled"
     else "Extension load disabled")
   }
@@ -1226,7 +1229,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
     if (Internal.isFineLogging) Internal.logFine(this, "loading extension from (" + path + "," + entryPoint + ")")
     val error = mySQLiteWrapper.sqlite3_load_extension(handle, path, entryPoint)
     val rc = mySQLiteWrapper.getLastReturnCode
-    throwResult(rc, "loadExtension()", error)
+    if (rc != SQLITE_OK) throwResult(rc, "loadExtension()", error)
     if (Internal.isFineLogging) Internal.logFine(this, "extension (" + path + "," + entryPoint + ") loaded")
   }
 
@@ -1252,7 +1255,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
     if (Internal.isFineLogging) Internal.logFine(this, "creating intarray [" + name + "]")
     val r = mySQLiteWrapper.sqlite3_intarray_create(module, name)
     val rc = mySQLiteWrapper.getLastReturnCode
-    if (rc != 0) throwResult(rc, "createArray()", name + " (cannot allocate virtual table)")
+    if (rc != SQLITE_OK) throwResult(rc, "createArray()", name + " (cannot allocate virtual table)")
     if (r == null) throwResult(SQLiteConstants.WRAPPER_WEIRD, "createArray()", name)
     if (Internal.isFineLogging) Internal.logFine(this, "created intarray [" + name + "]")
     new Nothing(controller, r, name)
@@ -1265,7 +1268,8 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
     if (r == null) {
       if (Internal.isFineLogging) Internal.logFine(this, "registering INTARRAY module")
       myIntArrayModule = r = mySQLiteWrapper.sqlite3_intarray_register(handle)
-      throwResult(mySQLiteWrapper.getLastReturnCode, "getIntArrayModule()")
+      val lastRC = mySQLiteWrapper.getLastReturnCode
+      if (lastRC != SQLITE_OK) throwResult(lastRC, "getIntArrayModule()")
       if (r == null) throwResult(SQLiteConstants.WRAPPER_WEIRD, "getIntArrayModule()")
     }
     r
@@ -1300,7 +1304,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
     val alienThread = myConfinement != Thread.currentThread
 
     if (!alienThread) {
-      logger.trace(mkLogMessage("finalizing statements"))
+      if (canLogTrace) logger.trace(mkLogMessage("finalizing statements"))
 
       var isStmtListNonEmpty = true
       while (isStmtListNonEmpty) {
@@ -1321,7 +1325,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
         }
       }
 
-      logger.trace(mkLogMessage("finalizing cached statements"))
+      if (canLogTrace) logger.trace(mkLogMessage("finalizing cached statements"))
 
       var isStmtCacheNonEmpty = true
       while (isStmtCacheNonEmpty) {
@@ -1399,7 +1403,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
   private def finalizeBlobs(): Unit = {
     val alienThread = myConfinement != Thread.currentThread
     if (!alienThread) {
-      logger.trace(mkLogMessage("finalizing blobs"))
+      if (canLogTrace) logger.trace(mkLogMessage("finalizing blobs"))
 
       var isBlobsNonEmpty = true
       while (isBlobsNonEmpty) {
@@ -1432,7 +1436,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
   }
 
   private[sqlite4s] def finalizeBlob(blob: SQLiteBlob): Unit = {
-    logger.trace(mkLogMessage("finalizing blob"))
+    if (canLogTrace) logger.trace(mkLogMessage("finalizing blob"))
 
     val handle = blob.blobHandle
     blob.clear()
@@ -1441,14 +1445,14 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
   }
 
   private def finalizeStatement(handle: SQLiteStatement.Handle, sql: SQLParts): Unit = {
-    logger.trace(mkLogMessage(s"finalizing cached stmt for $sql"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"finalizing cached stmt for $sql"))
 
     softFinalize(handle, sql)
     myLock synchronized { forgetCachedHandle(handle, sql) }
   }
 
   private[sqlite4s] def finalizeStatement(statement: SQLiteStatement): Unit = {
-    logger.trace(mkLogMessage("finalizing statement"))
+    if (canLogTrace) logger.trace(mkLogMessage("finalizing statement"))
     val handle = statement.statementHandle()
     val sql = statement.getSqlParts()
     statement.clear()
@@ -1503,7 +1507,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
     }
     try {
       val rc = SQLiteWrapper.sqlite3_intarray_unbind(handle)
-      throwResult(rc, "intarray_unbind")
+      if (rc != SQLITE_OK) throwResult(rc, "intarray_unbind")
     } catch {
       case e: SQLiteException =>
         Internal.log(Level.WARNING, array, "exception when clearing", e)
@@ -1520,7 +1524,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
     * Called from {@link SQLiteStatement#dispose()}
     */
   private[sqlite4s] def cacheStatementHandle(statement: SQLiteStatement): Unit = {
-    logger.trace(mkLogMessage("returning handle to cache"))
+    if (canLogTrace) logger.trace(mkLogMessage("returning handle to cache"))
 
     var finalize = false
     val handle: SQLiteStatement.Handle = statement.statementHandle()
@@ -1529,11 +1533,11 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
     try {
       if (statement.hasStepped) {
         val rc = sqlite.sqlite3_reset(handle)
-        throwResult(rc, "reset")
+        if (rc != SQLITE_OK) throwResult(rc, "reset")
       }
       if (statement.hasBindings) {
         val rc = sqlite.sqlite3_clear_bindings(handle)
-        throwResult(rc, "clearBindings")
+        if (rc != SQLITE_OK) throwResult(rc, "clearBindings")
       }
     } catch {
       case e: SQLiteException =>
@@ -1553,7 +1557,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
               true
             )
           } else { // put it back
-            logger.trace(mkLogMessage(s"second statement cached copy for [$sql] prevails"))
+            if (canLogTrace) logger.trace(mkLogMessage(s"second statement cached copy for [$sql] prevails"))
             // FIXME: DBO => do we need to do this and is this correct?
             myStatementCache.put(sql, expunged)
             finalize = true
@@ -1564,7 +1568,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
     }
 
     if (finalize) {
-      logger.trace(mkLogMessage("cache doesn't need me, finalizing statement"))
+      if (canLogTrace) logger.trace(mkLogMessage("cache doesn't need me, finalizing statement"))
       finalizeStatement(handle, sql)
     }
   }
@@ -1626,15 +1630,15 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
   @throws[SQLiteException]
   private def open0(flags: Int): Unit = {
     // FIXME: use java.util.Locale when available in SN javalib
-    //logger.trace(mkLogMessage(s"opening (0x${Integer.toHexString(flags).toUpperCase(Locale.US)})"))
-    logger.trace(mkLogMessage(s"opening (0x${Integer.toHexString(flags).toUpperCase()})"))
+    //if (canLogTrace) logger.trace(mkLogMessage(s"opening (0x${Integer.toHexString(flags).toUpperCase(Locale.US)})"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"opening (0x${Integer.toHexString(flags).toUpperCase()})"))
 
     var handle: SQLiteConnection.Handle = null
     myLock synchronized {
       if (myDisposed) throw new SQLiteException(WRAPPER_MISUSE, "cannot reopen closed connection")
       if (myConfinement == null) {
         myConfinement = Thread.currentThread
-        logger.trace(mkLogMessage(s"confined to $myConfinement"))
+        if (canLogTrace) logger.trace(mkLogMessage(s"confined to $myConfinement"))
       }
       else checkThread()
 
@@ -1646,19 +1650,19 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
     }
 
     val dbname = getSqliteDbName()
-    logger.trace(mkLogMessage(s"dbname [$dbname]"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"dbname [$dbname]"))
 
     handle = mySQLiteWrapper.sqlite3OpenV2(dbname, flags)
     val rc = mySQLiteWrapper.getLastReturnCode()
     if (rc != SQLITE_OK) {
       if (handle != null) {
-        logger.trace(mkLogMessage(s"error on open ($rc), closing handle"))
+        if (canLogTrace) logger.trace(mkLogMessage(s"error on open ($rc), closing handle"))
 
         try
           sqlite.sqlite3_close(handle)
         catch {
           case e: Exception =>
-            logger.trace(mkLogMessage(s"error on closing after failed open"),e)
+            if (canLogTrace) logger.trace(mkLogMessage(s"error on closing after failed open"),e)
         }
       }
       var errorMessage = mySQLiteWrapper.drainLastOpenError()
@@ -1780,7 +1784,8 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
 
     assert(buffer == null)
     buffer = mySQLiteWrapper.wrapper_alloc(size)
-    throwResult(mySQLiteWrapper.getLastReturnCode, "allocateBuffer", minimumSize)
+    val lastRC = mySQLiteWrapper.getLastReturnCode
+    if (lastRC != SQLITE_OK) throwResult(lastRC, "allocateBuffer", minimumSize)
     if (buffer == null) throw new SQLiteException(WRAPPER_WEIRD, "cannot allocate buffer [" + minimumSize + "]")
     buffer.incUsed
     buffer.data.clear

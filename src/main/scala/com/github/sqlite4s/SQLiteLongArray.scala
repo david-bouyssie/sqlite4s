@@ -122,7 +122,7 @@ class SQLiteLongArray private[sqlite4s](
         )
         return
     }
-    logger.trace(Internal.mkLogMessage(this.toString(), "disposing"))
+    if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), "disposing"))
 
     controller.dispose(this)
     myHandle = null
@@ -163,7 +163,7 @@ class SQLiteLongArray private[sqlite4s](
     if (length > 0 && offset + length > values.length) throw new Nothing(offset + length)
     myController.validate()
 
-    logger.trace(Internal.mkLogMessage(this.toString(), s"bind[$length"))
+    if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), s"bind[$length"))
 
     var rc = 0
     if (length == 0) rc = _SQLiteManual.sqlite3_intarray_unbind(handle)
@@ -172,7 +172,7 @@ class SQLiteLongArray private[sqlite4s](
       rc = _SQLiteManual.sqlite3_intarray_bind(handle, values, offset, length, ordered, unique)
     }
 
-    myController.throwResult(rc, "bind(array)", this)
+    if (rc != SQLITE_OK) myController.throwResult(rc, "bind(array)", this)
 
     this
   }

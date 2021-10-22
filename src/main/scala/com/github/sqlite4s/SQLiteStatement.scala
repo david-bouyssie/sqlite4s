@@ -20,10 +20,8 @@ package com.github.sqlite4s
 import java.io.IOException
 import java.nio.BufferUnderflowException
 import java.util
-
 import scala.scalanative.runtime.ByteArray
 import scala.scalanative.unsafe._
-
 import bindings.sqlite.SQLITE_CONSTANT._
 import com.github.sqlite4s.bindings.sqlite_addons.sqlite3_destructor_type
 import com.github.sqlite4s.bindings.sqlite_addons.DESTRUCTOR_TYPE._
@@ -74,6 +72,10 @@ object SQLiteStatement {
   implicit class HandleWrapper(val handle: Handle) extends AnyVal {
     def asPtr(): Ptr[sqlite.sqlite3_stmt] = handle.asInstanceOf[Ptr[sqlite.sqlite3_stmt]]
   }
+
+  private val STEP_METHOD_NAME = "step"
+  private val LOAD_INTS_METHOD_NAME = "loadInts"
+  private val LOAD_LONGS_METHOD_NAME = "loadLongs"
 }
 
 final class SQLiteStatement private() extends Logging {
@@ -90,6 +92,7 @@ final class SQLiteStatement private() extends Logging {
     * The controller that handles connection-level operations. Initially it is set
     */
   private var myController: SQLiteController = SQLiteController.getDisposed(null)
+  private var mySQLiteWrapper: SQLiteWrapper = myController.getSQLiteWrapper()
 
   /**
     * Statement handle wrapper. Becomes null when disposed.
@@ -142,13 +145,14 @@ final class SQLiteStatement private() extends Logging {
     assert(handle != null, "handle is null")
     assert(sqlParts.isFixed(), sqlParts)
     myController = controller
+    mySQLiteWrapper = controller.getSQLiteWrapper()
     myHandle = handle
     mySqlParts = sqlParts
     myProfiler = profiler
-    logger.trace(mkLogMessage("instantiated"))
+    if (canLogTrace) logger.trace(mkLogMessage("instantiated"))
   }
 
-  def statementHandle(): SQLiteStatement.Handle = myHandle
+  @inline def statementHandle(): SQLiteStatement.Handle = myHandle
 
   @throws[SQLiteException]
   private def _getHandleOrFail(): SQLiteStatement.Handle = {
@@ -193,7 +197,7 @@ final class SQLiteStatement private() extends Logging {
         return
     }
 
-    logger.trace(mkLogMessage("disposing"))
+    if (canLogTrace) logger.trace(mkLogMessage("disposing"))
 
     myController.dispose(this)
 
@@ -217,12 +221,12 @@ final class SQLiteStatement private() extends Logging {
   def reset(clearBindings: Boolean): SQLiteStatement = {
     myController.validate()
 
-    logger.trace(mkLogMessage(s"reset($clearBindings)"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"reset($clearBindings)"))
 
     val handle = _getHandleOrFail()
     //---//clearColumnStreams()
     if (myStepped) {
-      logger.trace(mkLogMessage("resetting"))
+      if (canLogTrace) logger.trace(mkLogMessage("resetting"))
       sqlite.sqlite3_reset(handle)
     }
 
@@ -231,10 +235,10 @@ final class SQLiteStatement private() extends Logging {
     myColumnCount = -1
 
     if (clearBindings && myHasBindings) {
-      logger.trace(mkLogMessage("clearing bindings"))
+      if (canLogTrace) logger.trace(mkLogMessage("clearing bindings"))
 
       val rc = sqlite.sqlite3_clear_bindings(handle)
-      myController.throwResult(rc, "reset.clearBindings()", this)
+      if (rc != SQLITE_OK) myController.throwResult(rc, "reset.clearBindings()", this)
 
       //---//clearBindStreams(false)
       myHasBindings = false
@@ -268,12 +272,12 @@ final class SQLiteStatement private() extends Logging {
   @throws[SQLiteException]
   def clearBindings(): SQLiteStatement = {
     myController.validate()
-    logger.trace(mkLogMessage("clearBindings()"))
+    if (canLogTrace) logger.trace(mkLogMessage("clearBindings()"))
 
     if (myHasBindings) {
-      logger.trace(mkLogMessage("clearing bindings"))
+      if (canLogTrace) logger.trace(mkLogMessage("clearing bindings"))
       val rc = sqlite.sqlite3_clear_bindings(_getHandleOrFail())
-      myController.throwResult(rc, "clearBindings()", this)
+      if (rc != SQLITE_OK) myController.throwResult(rc, "clearBindings()", this)
       //---//clearBindStreams(false)
     }
 
@@ -306,7 +310,8 @@ final class SQLiteStatement private() extends Logging {
   @throws[SQLiteException]
   def step(): Boolean = {
     myController.validate()
-    logger.trace(mkLogMessage("step()"))
+
+    if (canLogTrace) logger.trace(mkLogMessage("step()"))
 
     val handle = _getHandleOrFail()
     var rc = 0
@@ -319,10 +324,10 @@ final class SQLiteStatement private() extends Logging {
       rc = sqlite.sqlite3_step(handle)
       //---//if (profiler != null) profiler.reportStep(myStepped, mySqlParts.toString, from, System.nanoTime, rc)
     } finally {
-      finalizeStep(ph, "step")
+      _finalizeStepProgressHandler(ph, SQLiteStatement.STEP_METHOD_NAME)
     }
 
-    stepResult(rc, "step")
+    _checkStepResult(rc, SQLiteStatement.STEP_METHOD_NAME)
 
     myHasRow
   }
@@ -428,10 +433,10 @@ final class SQLiteStatement private() extends Logging {
   def loadInts(column: Int, buffer: Array[Int], offset: Int, length: Int): Int = {
     require(buffer != null, "buffer is null")
 
-    logger.trace(Internal.mkLogMessage(this.toString(), s"loadInts($column,$offset,$length)"))
+    if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), s"loadInts($column,$offset,$length)"))
 
     this._loadIntsOrLongs(
-      "loadInts",
+      SQLiteStatement.LOAD_INTS_METHOD_NAME,
       wrapper => wrapper.wrapper_load_ints(_getHandleOrFail(), column, buffer, offset, length),
       (profiler, from, rc, count) => profiler.reportLoadInts(myStepped, mySqlParts.toString(), from, System.nanoTime, rc, count)
     )
@@ -473,10 +478,10 @@ final class SQLiteStatement private() extends Logging {
   def loadLongs(column: Int, buffer: Array[Long], offset: Int, length: Int): Int = {
     require(buffer != null, "buffer is null")
 
-    logger.trace(Internal.mkLogMessage(this.toString(), s"loadLongs($column,$offset,$length)"))
+    if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), s"loadLongs($column,$offset,$length)"))
 
     this._loadIntsOrLongs(
-      "loadLongs",
+      SQLiteStatement.LOAD_LONGS_METHOD_NAME,
       wrapper => wrapper.wrapper_load_longs(_getHandleOrFail(), column, buffer, offset, length),
       (profiler, from, rc, count) => profiler.reportLoadLongs(myStepped, mySqlParts.toString(), from, System.nanoTime, rc, count)
     )
@@ -496,7 +501,7 @@ final class SQLiteStatement private() extends Logging {
     val ph = prepareStep()
 
     try {
-      val wrapper = myController.getSQLiteWrapper()
+      val wrapper = mySQLiteWrapper
       val profiler = myProfiler
       val from = if (profiler == null) 0 else System.nanoTime
 
@@ -506,9 +511,9 @@ final class SQLiteStatement private() extends Logging {
 
       if (profiler != null) profilerReporter(profiler, from, rc, loadedValues)
 
-    } finally finalizeStep(ph, methodName)
+    } finally _finalizeStepProgressHandler(ph, methodName)
 
-    stepResult(rc, methodName)
+    _checkStepResult(rc, methodName)
 
     loadedValues
   }
@@ -580,11 +585,11 @@ final class SQLiteStatement private() extends Logging {
   @inline
   private def _bind[T](fnSignature: String, traceMsg: => String, bindingFn: => CInt): SQLiteStatement = {
     myController.validate()
-    logger.trace(mkLogMessage(traceMsg))
+    if (canLogTrace) logger.trace(mkLogMessage(traceMsg))
 
     // Execute binding function
     val rc = bindingFn
-    myController.throwResult(rc, fnSignature, this)
+    if (rc != SQLITE_OK) myController.throwResult(rc, fnSignature, this)
 
     myHasBindings = true
 
@@ -687,7 +692,7 @@ final class SQLiteStatement private() extends Logging {
   @throws[SQLiteException]
   def bind(index: Int, value: String): SQLiteStatement = {
     if (value == null) {
-      logger.trace(mkLogMessage("bind(null string)"))
+      if (canLogTrace) logger.trace(mkLogMessage("bind(null string)"))
       return bindNull(index)
     }
 
@@ -726,7 +731,7 @@ final class SQLiteStatement private() extends Logging {
   @throws[SQLiteException]
   def bind(index: Int, value: String, z: Zone): SQLiteStatement = {
     if (value == null) {
-      logger.trace(mkLogMessage("bind(null string)"))
+      if (canLogTrace) logger.trace(mkLogMessage("bind(null string)"))
       return bindNull(index)
     }
 
@@ -783,7 +788,7 @@ final class SQLiteStatement private() extends Logging {
   @throws[SQLiteException]
   def bind(index: Int, value: Array[Byte], offset: Int, length: Int): SQLiteStatement = {
     if (value == null) {
-      logger.trace(mkLogMessage("bind(null blob)"))
+      if (canLogTrace) logger.trace(mkLogMessage("bind(null blob)"))
       return bindNull(index)
     }
 
@@ -829,7 +834,7 @@ final class SQLiteStatement private() extends Logging {
     destructor: sqlite3_destructor_type
   ): SQLiteStatement = {
     if (value == null) {
-      logger.trace(mkLogMessage("bind(null blob)"))
+      if (canLogTrace) logger.trace(mkLogMessage("bind(null blob)"))
       return bindNull(index)
     }
 
@@ -873,7 +878,7 @@ final class SQLiteStatement private() extends Logging {
   @throws[SQLiteException]
   def bindZeroBlob(index: Int, length: Int): SQLiteStatement = {
     if (length < 0) {
-      logger.trace(mkLogMessage("bind(null blob)"))
+      if (canLogTrace) logger.trace(mkLogMessage("bind(null blob)"))
       return bindNull(index)
     }
 
@@ -1035,16 +1040,17 @@ final class SQLiteStatement private() extends Logging {
     * @see <a href="http://www.sqlite.org/c3ref/column_blob.html">sqlite3_column_text16</a>
     */
   @throws[SQLiteException]
-  def columnString(column: Int): String = {
+  @inline def columnString(column: Int): String = {
     val handle = _validateCheckColumnAndReturnHandle(column, true)
 
-    logger.trace(mkLogMessage(s"columnString($column)"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"columnString($column)"))
 
-    val sqliteWrapper = myController.getSQLiteWrapper()
+    val sqliteWrapper = mySQLiteWrapper
     val result = sqliteWrapper.sqlite3ColumnText(handle, column)
-    myController.throwResult(sqliteWrapper.getLastReturnCode(), "columnString()", this)
+    val lastRC = sqliteWrapper.getLastReturnCode()
+    if (lastRC != SQLITE_OK) myController.throwResult(lastRC, "columnString()", this)
 
-    logger.trace {
+    if (canLogTrace) logger.trace {
       if (result == null) s"columnString($column) is null"
       else if (result.length <= 20) s"columnString($column)=$result"
       else s"columnString($column)=${result.substring(0, 20)}...."
@@ -1067,13 +1073,13 @@ final class SQLiteStatement private() extends Logging {
   def columnInt(column: Int): Int = {
     val handle = _validateCheckColumnAndReturnHandle(column, true)
 
-    logger.trace(mkLogMessage(s"columnInt($column)"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"columnInt($column)"))
 
     // TODO: we don't know how to check if it failed (memory allocation error)
     // See: http://sqlite.1065341.n5.nabble.com/Checking-for-errors-in-sqlite3-column-td102290.html
     val r = sqlite.sqlite3_column_int(handle, column)
 
-    logger.trace(mkLogMessage(s"columnInt($column)=$r"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"columnInt($column)=$r"))
 
     r
   }
@@ -1092,13 +1098,13 @@ final class SQLiteStatement private() extends Logging {
   def columnDouble(column: Int): Double = {
     val handle = _validateCheckColumnAndReturnHandle(column, true)
 
-    logger.trace(mkLogMessage(s"columnDouble($column)"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"columnDouble($column)"))
 
     // TODO: we don't know how to check if it failed (memory allocation error)
     // See: http://sqlite.1065341.n5.nabble.com/Checking-for-errors-in-sqlite3-column-td102290.html
     val r = sqlite.sqlite3_column_double(handle, column)
 
-    logger.trace(mkLogMessage(s"columnDouble($column)=$r"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"columnDouble($column)=$r"))
 
     r
   }
@@ -1117,13 +1123,13 @@ final class SQLiteStatement private() extends Logging {
   def columnLong(column: Int): Long = {
     val handle = _validateCheckColumnAndReturnHandle(column, true)
 
-    logger.trace(mkLogMessage(s"columnLong($column)"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"columnLong($column)"))
 
     // TODO: we don't know how to check if it failed (memory allocation error)
     // See: http://sqlite.1065341.n5.nabble.com/Checking-for-errors-in-sqlite3-column-td102290.html
     val r = sqlite.sqlite3_column_int64(handle, column)
 
-    logger.trace(mkLogMessage(s"columnLong($column)=$r"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"columnLong($column)=$r"))
 
     r
   }
@@ -1142,13 +1148,14 @@ final class SQLiteStatement private() extends Logging {
   def columnBlob(column: Int): Array[Byte] = {
     val handle = _validateCheckColumnAndReturnHandle(column, true)
 
-    logger.trace(mkLogMessage(s"columnBytes($column)"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"columnBytes($column)"))
 
-    val wrapper = myController.getSQLiteWrapper()
+    val wrapper = mySQLiteWrapper
     val r = wrapper.sqlite3ColumnBlob(handle, column)
-    myController.throwResult(wrapper.getLastReturnCode(), "columnBytes", this)
+    val lastRC = wrapper.getLastReturnCode()
+    if (lastRC != SQLITE_OK) myController.throwResult(lastRC, "columnBytes", this)
 
-    logger.trace(mkLogMessage(
+    if (canLogTrace) logger.trace(mkLogMessage(
       s"columnBytes($column)=[${if (r == null) "null" else r.length}]"
     ))
 
@@ -1174,9 +1181,10 @@ final class SQLiteStatement private() extends Logging {
     val handle = _getHandleOrFail()
     checkColumn(column, handle, true)
     if (SQLiteException.isFineLogging) SQLiteException.logFine(this, "columnStream(" + column + ")")
-    val sqlite = myController.getSQLiteWrapper()
+    val sqlite = mySQLiteWrapper
     val buffer = sqlite.wrapper_column_buffer(handle, column)
-    myController.throwResult(sqlite.getLastReturnCode, "columnStream", this)
+    val lastRC = sqlite.getLastReturnCode
+    if (lastRC != SQLITE_OK) myController.throwResult(lastRC, "columnStream", this)
     if (buffer == null) return null
     val in = new SQLiteStatement#ColumnStream(buffer)
     var table = myColumnStreams
@@ -1301,12 +1309,12 @@ final class SQLiteStatement private() extends Logging {
   def getColumnName(column: Int): String = {
     val handle = _validateCheckColumnAndReturnHandle(column, false)
 
-    logger.trace(mkLogMessage(s"columnName($column)"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"columnName($column)"))
 
     val rAsCStr = sqlite.sqlite3_column_name(handle, column)
     val rAsStr = fromCString(rAsCStr)
 
-    logger.trace(mkLogMessage(s"columnName($column)=$rAsStr"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"columnName($column)=$rAsStr"))
 
     rAsStr
   }
@@ -1323,12 +1331,12 @@ final class SQLiteStatement private() extends Logging {
   def getColumnTableName(column: Int): String = {
     val handle = _validateCheckColumnAndReturnHandle(column, false)
 
-    logger.trace(mkLogMessage(s"columnTableName($column)"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"columnTableName($column)"))
 
     val rAsCStr = sqlite.sqlite3_column_table_name(handle, column)
     val rAsStr = fromCString(rAsCStr)
 
-    logger.trace(mkLogMessage(s"columnTableName($column)=$rAsStr"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"columnTableName($column)=$rAsStr"))
 
     rAsStr
   }
@@ -1345,12 +1353,12 @@ final class SQLiteStatement private() extends Logging {
   def getColumnDatabaseName(column: Int): String = {
     val handle = _validateCheckColumnAndReturnHandle(column, false)
 
-    logger.trace(mkLogMessage(s"columnDatabaseName($column)"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"columnDatabaseName($column)"))
 
     val rAsCStr = sqlite.sqlite3_column_database_name(handle, column)
     val rAsStr = fromCString(rAsCStr)
 
-    logger.trace(mkLogMessage(s"columnDatabaseName($column)=$rAsStr"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"columnDatabaseName($column)=$rAsStr"))
 
     rAsStr
   }
@@ -1368,12 +1376,12 @@ final class SQLiteStatement private() extends Logging {
   def getColumnOriginName(column: Int): String = {
     val handle = _validateCheckColumnAndReturnHandle(column, false)
 
-    logger.trace(mkLogMessage(s"columnOriginName($column)"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"columnOriginName($column)"))
 
     val rAsCStr = sqlite.sqlite3_column_origin_name(handle, column)
     val rAsStr = fromCString(rAsCStr)
 
-    logger.trace(mkLogMessage(s"columnOriginName($column)=$rAsStr"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"columnOriginName($column)=$rAsStr"))
 
     rAsStr
   }
@@ -1404,7 +1412,7 @@ final class SQLiteStatement private() extends Logging {
     myStepped = false
     myController = SQLiteController.getDisposed(myController)
     //myProfiler = null
-    logger.trace(mkLogMessage("cleared"))
+    if (canLogTrace) logger.trace(mkLogMessage("cleared"))
   }
 
   /*private def clearColumnStreams(): Unit = {
@@ -1446,11 +1454,11 @@ final class SQLiteStatement private() extends Logging {
   private def getColumnType(column: Int, handle: SQLiteStatement.Handle): CInt = {
     checkColumn(column, handle, false)
 
-    logger.trace(mkLogMessage(s"columnType($column)"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"columnType($column)"))
 
     val r = sqlite.sqlite3_column_type(handle, column)
 
-    logger.trace(mkLogMessage(s"columnType($column)=$r"))
+    if (canLogTrace) logger.trace(mkLogMessage(s"columnType($column)=$r"))
 
     r
   }
@@ -1467,14 +1475,14 @@ final class SQLiteStatement private() extends Logging {
     var cc = myColumnCount
 
     if (cc < 0) { // data_count seems more safe than column_count
-      logger.trace("asking column count")
+      if (canLogTrace) logger.trace("asking column count")
       cc = sqlite.sqlite3_column_count(handle)
       myColumnCount = cc
       if (cc < 0) {
         SQLiteException.logWarnOrThrowError(msg => logger.warn(msg), s"columnsCount=$cc", true)
         cc = 0
       }
-      else logger.trace(s"columnCount=$cc")
+      else if (canLogTrace) logger.trace(s"columnCount=$cc")
     }
 
     cc
@@ -1501,31 +1509,30 @@ final class SQLiteStatement private() extends Logging {
     ph
   }
 
-  private def finalizeStep(ph: ProgressHandler, methodName: String): Unit = {
+  private def _finalizeStepProgressHandler(ph: ProgressHandler, methodName: String): Unit = {
     this synchronized {
       myProgressHandler = null
     }
 
     if (ph != null) {
-      logger.trace(Internal.mkLogMessage(this.toString(), s"$methodName ${ph.getSteps} steps" ))
+      if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), s"$methodName ${ph.getSteps} steps" ))
       ph.reset()
     }
   }
 
   @throws[SQLiteException]
-  // TODO: DBO => rename this methods because its name is misleading
-  private def stepResult(rc: Int, methodName: String): Unit = {
+  private def _checkStepResult(rc: Int, methodName: String): Unit = {
     if (!myStepped) { // if this is a first step, the statement may have been recompiled and column count changed
       myColumnCount = -1
     }
     myStepped = true
 
     if (rc == SQLITE_ROW) {
-      logger.trace(mkLogMessage(s"$methodName ROW"))
+      if (canLogTrace) logger.trace(mkLogMessage(s"$methodName ROW"))
       myHasRow = true
     }
     else if (rc == SQLITE_DONE) {
-      logger.trace(mkLogMessage(s"$methodName DONE"))
+      if (canLogTrace) logger.trace(mkLogMessage(s"$methodName DONE"))
       myHasRow = false
     }
     else myController.throwResult(rc,s"methodName()", this)
@@ -1598,7 +1605,7 @@ final class SQLiteStatement private() extends Logging {
         if (SQLiteException.isFineLogging) SQLiteException.logFine(thisSQLiteStatement, "BindStream.close:bind([" + buffer.data.capacity + "])")
         val rc = SQLiteWrapper.wrapper_bind_buffer(handle, myIndex, buffer)
         dispose()
-        myController.throwResult(rc, "bind(buffer)", thisSQLiteStatement)
+        if (rc != SQLITE_OK) myController.throwResult(rc, "bind(buffer)", thisSQLiteStatement)
       } catch {
         case e: SQLiteException =>
           throw new IOException("cannot write: " + e)

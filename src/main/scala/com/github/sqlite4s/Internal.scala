@@ -21,11 +21,11 @@ private[this] object Internal {
 
   private final val LOG_PREFIX = "[sqlite4s] "
 
-  def mkLogMessage(message: String): String = {
+  def mkLogMessage(message: => String): String = {
     mkLogMessage(null, message)
   }
 
-  def mkLogMessage(source: String, message: String): String = {
+  def mkLogMessage(source: => String, message: => String): String = {
     val builder = new StringBuilder(LOG_PREFIX)
     if (source != null) builder.append(source)
 

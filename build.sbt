@@ -1,21 +1,26 @@
 name := "sqlite4s"
 organization := "com.github.david-bouyssie"
-version := "0.4.0"
-scalaVersion := "2.11.12"
-crossScalaVersions := Seq("2.13.5", "2.12.13", "2.11.12")
+version := "0.4.1"
+scalaVersion := "2.13.6"
+crossScalaVersions := Seq("2.13.6", "2.12.15", "2.11.12")
 
-libraryDependencies += "com.outr" %%% "scribe" % "3.3.3"
-libraryDependencies += "com.lihaoyi" %%% "utest" % "0.7.7" % "test"
+libraryDependencies += "com.outr" %%% "scribe" % "3.6.1"
+libraryDependencies += "com.lihaoyi" %%% "utest" % "0.7.10" % "test"
 
 testFrameworks += new TestFramework("utest.runner.Framework")
+// Disable parallel execution of tests (as they need to be launched independently)
+Test / parallelExecution := false
 
 enablePlugins(ScalaNativePlugin)
 
 // Set to false or remove if you want to show stubs as linking errors
 nativeLinkStubs := true
 
-nativeMode := "release-fast"
-nativeLTO := "thin"
+nativeMode := "release-fast" //"release-fast"
+nativeLTO := "thin" //"none" //"thin"
+nativeLinkingOptions ++= Seq(
+  "-L" ++ baseDirectory.value.getAbsolutePath() ++ "/nativelib"
+)
 
 // Your profile name of the sonatype account. The default is the same with the organization value
 //sonatypeProfileName := "david-bouyssie"
@@ -51,11 +56,11 @@ publishTo := {
 
 // To publish to central:
 // export GPG_TTY=$(tty) # gpg issue (https://github.com/keybase/keybase-issues/issues/2798)
-// sbt publishSigned
+// sbt ++publishSigned
 //useGpg := true // (since 2.0.0): useGpg is true by default
 //pgpPublicRing := file("~/.gnupg/pubring.kbx")
 //pgpSecretRing := file("~/.gnupg/pubring.kbx")
-Test / skip in publish := true
+Test / skip / publish := true
 
 /*
 val commonSettings = Seq(

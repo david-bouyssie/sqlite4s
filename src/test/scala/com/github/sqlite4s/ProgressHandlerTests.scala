@@ -50,7 +50,8 @@ object ProgressHandlerTests extends SQLiteConnectionFixture {
     start = System.currentTimeMillis
     try {
       // FIXME: remove me when interruptLater() is correctly implemented
-      Thread.sleep(DELAY); throw new SQLiteInterruptedException()
+      Thread.sleep(DELAY)
+      throw new SQLiteInterruptedException()
       st.step()
       fail("stepped")
     } catch {
