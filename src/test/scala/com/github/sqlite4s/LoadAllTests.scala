@@ -22,8 +22,8 @@ import utest._
 object LoadAllTests extends SQLiteConnectionFixture {
 
   val tests = Tests {
-    'testInts - testInts
-    'testLongs - testLongs
+    "testInts" - testInts()
+    "testLongs" - testLongs()
   }
 
   @throws[SQLiteException]

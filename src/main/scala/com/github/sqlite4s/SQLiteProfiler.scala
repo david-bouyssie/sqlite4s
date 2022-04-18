@@ -22,7 +22,7 @@ import java.util._
 
 import scala.collection.JavaConverters._
 
-import bindings.sqlite.SQLITE_CONSTANT._
+import bindings.SQLITE_CONSTANT._
 
 /**
   * SQLiteProfiler measures and accumulates statistics for various SQLite methods. The statistics is then available
@@ -118,7 +118,7 @@ object SQLiteProfiler {
         addLeftColumn(b, key, maxPrefix)
         b.append("total:").append(formatDuration(stat.getTotalNanos())).append(' ')
         b.append("count:").append(stat.getTotalCount()).append(' ')
-        b.append("min|avg|max:").append(formatDuration(stat.getMinNanos())).append('|').append(formatDuration(stat.getAvgNanos())).append('|').append(formatDuration(stat.getMaxNanos)).append(' ')
+        b.append("min|avg|max:").append(formatDuration(stat.getMinNanos())).append('|').append(formatDuration(stat.getAvgNanos())).append('|').append(formatDuration(stat.getMaxNanos())).append(' ')
         b.append("freq:").append(stat.getFrequency())
         out.println(b.toString)
       }

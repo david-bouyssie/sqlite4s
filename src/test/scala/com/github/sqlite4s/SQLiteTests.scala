@@ -22,13 +22,13 @@ import utest._
 object SQLiteTests extends SQLiteTestFixture {
 
   val tests = Tests {
-    /*'test1 - {
+    /*"test1" - {
       throw new Exception("test1")
     }*/
-    'test2 - {
+    "test2" - {
       2 //MemoryMappedFileInScala.run()
     }
-    /*'test3 - {
+    /*"test3" - {
       val a = List[Byte](1, 2)
       a(10)
     }*/

@@ -22,10 +22,10 @@ import utest._
 object SQLiteValueTests extends SQLiteConnectionFixture {
 
   val tests = Tests {
-    'testString - testString
-    'testIntegerAndLong - testIntegerAndLong
-    'testColumnValueReturnsIntegerOrLong - testColumnValueReturnsIntegerOrLong
-    'testFloats - testFloats
+    "testString" - testString()
+    "testIntegerAndLong" - testIntegerAndLong()
+    "testColumnValueReturnsIntegerOrLong" - testColumnValueReturnsIntegerOrLong()
+    "testFloats" - testFloats()
   }
 
   @throws[SQLiteException]

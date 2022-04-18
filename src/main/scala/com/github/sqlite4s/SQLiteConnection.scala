@@ -24,7 +24,7 @@ import java.util.Locale
 import scala.scalanative.unsafe._
 
 import bindings.sqlite
-import bindings.sqlite.SQLITE_CONSTANT._
+import bindings.SQLITE_CONSTANT._
 import bindings.SQLITE_EXTENDED_RESULT_CODE._
 
 import com.github.sqlite4s.c.util.CUtils
@@ -195,7 +195,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
     *
     * @see #SQLiteConnection(java.io.File)
     */
-  def this() {
+  def this() = {
     this(null)
   }
 
@@ -261,7 +261,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
   @throws[SQLiteException]
   def setLimit(id: Int, newVal: Int): Int = {
     checkThread()
-    sqlite.sqlite3_limit(handle, id, newVal)
+    sqlite.sqlite3_limit(handle(), id, newVal)
   }
 
   /**
@@ -275,7 +275,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
   @throws[SQLiteException]
   def getLimit(id: Int): Int = {
     checkThread()
-    sqlite.sqlite3_limit(handle, id, -1)
+    sqlite.sqlite3_limit(handle(), id, -1)
   }
 
   /**
@@ -326,7 +326,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
     */
   @throws[SQLiteException]
   def openReadonly(): SQLiteConnection = {
-    if (isMemoryDatabase) throw new SQLiteException(WRAPPER_WEIRD, "cannot open memory database in read-only mode")
+    if (isMemoryDatabase()) throw new SQLiteException(WRAPPER_WEIRD, "cannot open memory database in read-only mode")
     open0(SQLITE_OPEN_READONLY)
     this
   }
@@ -419,7 +419,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
   def flush(): Unit = {
     checkThread()
     if (canLogTrace) logger.trace(mkLogMessage("calling sqlite3_db_cacheflush() via flush()"))
-    val result = sqlite.sqlite3_db_cacheflush(handle)
+    val result = sqlite.sqlite3_db_cacheflush(handle())
     if (result != SQLITE_OK) throwResult(result, "flush()")
   }
 
@@ -900,7 +900,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
   @throws[SQLiteException]
   def setBusyTimeout(millis: Long): SQLiteConnection = {
     checkThread()
-    val rc = sqlite.sqlite3_busy_timeout(handle, millis.toInt)
+    val rc = sqlite.sqlite3_busy_timeout(handle(), millis.toInt)
     if (rc != SQLITE_OK) throwResult(rc, "setBusyTimeout")
     this
   }
@@ -917,7 +917,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
   @throws[SQLiteException]
   def getAutoCommit(): Boolean = {
     checkThread()
-    val r = sqlite.sqlite3_get_autocommit(handle)
+    val r = sqlite.sqlite3_get_autocommit(handle())
     r != 0
   }
 
@@ -934,7 +934,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
   @throws[SQLiteException]
   def getLastInsertId(): Long = {
     checkThread()
-    val id = sqlite.sqlite3_last_insert_rowid(handle)
+    val id = sqlite.sqlite3_last_insert_rowid(handle())
     id
   }
 
@@ -949,7 +949,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
   @throws[SQLiteException]
   def getChanges(): Int = {
     checkThread()
-    sqlite.sqlite3_changes(handle)
+    sqlite.sqlite3_changes(handle())
   }
 
   /**
@@ -963,7 +963,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
   @throws[SQLiteException]
   def getTotalChanges(): Int = {
     checkThread()
-    sqlite.sqlite3_total_changes(handle)
+    sqlite.sqlite3_total_changes(handle())
   }
 
   /**
@@ -979,7 +979,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
     */
   @throws[SQLiteException]
   def interrupt(): Unit = {
-    sqlite.sqlite3_interrupt(handle)
+    sqlite.sqlite3_interrupt(handle())
   }
 
   /**
@@ -994,7 +994,7 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
   @throws[SQLiteException]
   def getErrorCode(): Int = {
     checkThread()
-    sqlite.sqlite3_errcode(handle)
+    sqlite.sqlite3_errcode(handle())
   }
 
   /**
@@ -1836,15 +1836,18 @@ final class SQLiteConnection(val dbfile: File) extends Logging {
       }
 
       val cells = new util.ArrayList[String]
-      do {
-        for (i <- columnIndices) {
-          val v = if (st.columnNull(i)) "<null>"
-          else String.valueOf(st.columnValue(i))
-          cells.add(v)
-          widths(i) = Math.max(widths(i), v.length)
+      locally {
+        var continue = true
+        while(continue) {
+          for (i <- columnIndices) {
+            val v = if (st.columnNull(i)) "<null>"
+            else String.valueOf(st.columnValue(i))
+            cells.add(v)
+            widths(i) = Math.max(widths(i), v.length)
+          }
+          continue = st.step()
         }
-      } while (st.step())
-
+      }
       val buf = new java.lang.StringBuilder()
       buf.append('|')
 

@@ -42,18 +42,18 @@ final class DirectBuffer(
   private val mySize: Int
 ) {
   require(
-    mySize == myControlBuffer.limit + myDataBuffer.capacity,
-    s"sum of buffer sizes should be equal to mySize: $mySize != ${myControlBuffer.limit} + ${myDataBuffer.capacity}"
+    mySize == myControlBuffer.limit() + myDataBuffer.capacity,
+    s"sum of buffer sizes should be equal to mySize: $mySize != ${myControlBuffer.limit()} + ${myDataBuffer.capacity}"
   )
   require(
-    myControlBuffer.limit == DirectBuffer.CONTROL_BYTES,
-    "invalid control buffer size: " + myControlBuffer.limit
+    myControlBuffer.limit() == DirectBuffer.CONTROL_BYTES,
+    "invalid control buffer size: " + myControlBuffer.limit()
   )
   require(mySize > DirectBuffer.CONTROL_BYTES, s"mysSize should be greater than control buffer size: $mySize")
 
   @throws[IOException]
   def data(): ByteBufferWrapper = {
-    if (!isValid) throw new IOException("buffer disposed")
+    if (!isValid()) throw new IOException("buffer disposed")
     myDataBuffer
   }
 

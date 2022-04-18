@@ -280,7 +280,7 @@ abstract class SQLiteJob[T] extends Future[T] with Logging { // <: AnyRef
       get(java.lang.Long.MAX_VALUE, TimeUnit.MILLISECONDS)
     catch {
       case e: TimeoutException =>
-        throw new AssertionError(e + " cannot happen")
+        throw new AssertionError(s"$e cannot happen")
     }
   }
 
@@ -303,7 +303,7 @@ abstract class SQLiteJob[T] extends Future[T] with Logging { // <: AnyRef
     myLock synchronized {
       if (!isDone) {
         val queue = myQueue
-        if (queue != null && queue.isDatabaseThread)
+        if (queue != null && queue.isDatabaseThread())
           throw new IllegalStateException("called from the database thread, would block forever")
 
         var now = System.currentTimeMillis

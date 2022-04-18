@@ -23,7 +23,7 @@ import utest._
 object RegressionIssue18Tests extends SQLiteConnectionFixture {
 
   val tests = Tests {
-    'testConcurrentDisposeCrash - testConcurrentDisposeCrash
+    "testConcurrentDisposeCrash" - testConcurrentDisposeCrash()
   }
 
   private var disposeCalled = false

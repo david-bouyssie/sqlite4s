@@ -17,9 +17,7 @@
 
 package com.github.sqlite4s
 
-import scala.beans.BeanProperty
-
-import bindings.sqlite.SQLITE_CONSTANT._
+import bindings.SQLITE_CONSTANT._
 import bindings.SQLITE_EXTENDED_RESULT_CODE._
 
 object SQLITE_WRAPPER_ERROR_CODE {
@@ -108,11 +106,12 @@ object SQLiteException {
   * @param cause        error cause
   */
 class SQLiteException(
-  @BeanProperty val errorCode: Int,
-  @BeanProperty val errorMessage: String,
+  val errorCode: Int,
+  val errorMessage: String,
   val cause: Throwable
 ) extends Exception("[" + errorCode + "] " + (if (errorMessage == null) "sqlite error"  else errorMessage), cause) with Logging {
-
+  def getErrorCode(): Int = errorCode
+  def getErrorMessage(): String = errorMessage
   override def getCause(): Throwable = cause
 
   /**
@@ -121,7 +120,7 @@ class SQLiteException(
     * @param errorCode codes are defined in { @link SQLiteConstants}
     * @param errorMessage optional error message
     */
-  def this(errorCode: Int, errorMessage: String) {
+  def this(errorCode: Int, errorMessage: String) = {
     this(errorCode, errorMessage, null)
   }
 
@@ -166,7 +165,7 @@ class SQLiteBusyException(override val errorCode: Int, override val errorMessage
   * @see <a href="http://www.sqlite.org/c3ref/interrupt.html">sqlite3_interrupt</a>
   */
 class SQLiteInterruptedException(val resultCode: Int, val message: String) extends SQLiteException(resultCode, message) {
-  def this() {
+  def this() = {
     this(SQLITE_INTERRUPT, "")
   }
 }

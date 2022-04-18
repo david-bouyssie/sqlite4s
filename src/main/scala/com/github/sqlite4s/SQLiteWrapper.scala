@@ -23,8 +23,8 @@ import scala.scalanative.unsafe._
 import scala.scalanative.unsafe.Tag.CFuncPtr1
 import scala.scalanative.unsigned._
 import bindings.sqlite
-import bindings.sqlite.SQLITE_CONSTANT._
-import bindings.sqlite_addons.DESTRUCTOR_TYPE._
+import bindings.SQLITE_CONSTANT._
+import bindings.DESTRUCTOR_TYPE._
 import bindings.sqlite_addons.sqlite3_destructor_type
 import com.github.sqlite4s.SQLITE_WRAPPER_ERROR_CODE._
 import com.github.sqlite4s.c.util.{CUtils, PtrBox}
@@ -90,7 +90,7 @@ object SQLiteWrapper {
     require(sql != null, "sql is null")
     //require(outError == null || outError.length == 1, s"invalid outError length: ${outError.length}")
 
-    val errMsgPtr: Ptr[CString] = stackalloc[CString]
+    val errMsgPtr: Ptr[CString] = stackalloc[CString]()
 
     val rc = Zone { implicit z: Zone =>
 
@@ -169,11 +169,11 @@ object SQLiteWrapper {
     require(db != null, "db is null")
     require(tableName != null, "tableName is null")
 
-    val pzDataType: Ptr[CString] = stackalloc[CString]
-    val pzCollSeq: Ptr[CString] = stackalloc[CString]
-    val pNotNull: Ptr[CInt] = stackalloc[CInt]
-    val pPrimaryKey: Ptr[CInt] = stackalloc[CInt]
-    val pAutoinc: Ptr[CInt] = stackalloc[CInt]
+    val pzDataType: Ptr[CString] = stackalloc[CString]()
+    val pzCollSeq: Ptr[CString] = stackalloc[CString]()
+    val pNotNull: Ptr[CInt] = stackalloc[CInt]()
+    val pPrimaryKey: Ptr[CInt] = stackalloc[CInt]()
+    val pAutoinc: Ptr[CInt] = stackalloc[CInt]()
 
     var rc = Zone { implicit z: Zone =>
       sqlite.sqlite3_table_column_metadata(
@@ -391,7 +391,7 @@ object SQLiteWrapper {
     }
    */
 
-  val progress_handler_cb = CFuncPtr1.fromScalaFunction({ ptr: Ptr[Byte] =>
+  val progress_handler_cb = CFuncPtr1.fromScalaFunction((ptr: Ptr[Byte]) => {
     if (ptr == null) 1
     else {
       val longPtr = ptr.asInstanceOf[Ptr[CLong]]
@@ -459,7 +459,7 @@ class SQLiteWrapper {
 
     myLastReturnCode = 0
 
-    val dbPtr = stackalloc[Ptr[sqlite.sqlite3]]
+    val dbPtr = stackalloc[Ptr[sqlite.sqlite3]]()
 
     val rc = Zone { implicit z: Zone =>
       // Note: we use the Charset "UTF-8" to get filename in correct UTF-8
@@ -563,7 +563,7 @@ class SQLiteWrapper {
 
     myLastReturnCode = 0
 
-    val stmtPtr = stackalloc[Ptr[sqlite.sqlite3_stmt]]
+    val stmtPtr = stackalloc[Ptr[sqlite.sqlite3_stmt]]()
 
     val rc = Zone { implicit z: Zone =>
       // Note (https://sqlite.org/capi3ref.html#sqlite3_prepare):
@@ -752,7 +752,7 @@ class SQLiteWrapper {
 
     myLastReturnCode = 0
 
-    val blobPtr = stackalloc[Ptr[sqlite.sqlite3_blob]]
+    val blobPtr = stackalloc[Ptr[sqlite.sqlite3_blob]]()
 
     val rc = Zone { implicit z: Zone =>
       sqlite.sqlite3_blob_open(

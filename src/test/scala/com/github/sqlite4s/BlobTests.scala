@@ -22,10 +22,10 @@ import utest._
 object BlobTests extends SQLiteConnectionFixture {
 
   val tests = Tests {
-    'testOpen - testOpen
-    'testReadWrite - testReadWrite
-    'testRowidEqualsPK - testRowidEqualsPK
-    'testBlobBindColumn - testBlobBindColumn
+    "testOpen" - testOpen()
+    "testReadWrite" - testReadWrite()
+    "testRowidEqualsPK" - testRowidEqualsPK()
+    "testBlobBindColumn" - testBlobBindColumn()
   }
 
   private val SIZE = 100000
@@ -64,7 +64,7 @@ object BlobTests extends SQLiteConnectionFixture {
     blob = db.blob(null, "T", "value", 1, false)
     assert(!blob.isDisposed())
     assert(!blob.isWriteAllowed)
-    assert(BlobTests.SIZE == blob.getSize)
+    assert(BlobTests.SIZE == blob.getSize())
     blob.dispose()
     assert(blob.isDisposed())
     try {
@@ -113,7 +113,7 @@ object BlobTests extends SQLiteConnectionFixture {
     val db = fileDb().open(true)
     db.exec("drop table if exists T")
     db.exec("create table T (id integer not null primary key autoincrement, value blob)")
-    db.prepare("insert into T (value) values (?)").bindZeroBlob(1, BlobTests.SIZE).stepThrough.dispose()
+    db.prepare("insert into T (value) values (?)").bindZeroBlob(1, BlobTests.SIZE).stepThrough().dispose()
     val id = db.getLastInsertId()
     assert(1 == id)
     db
@@ -168,10 +168,10 @@ object BlobTests extends SQLiteConnectionFixture {
 
   @throws[SQLiteException]
   def testRowidEqualsPK(): Unit = {
-    val db = fileDb.open(true)
+    val db = fileDb().open(true)
     db.exec("drop table if exists T")
     db.exec("create table T (id integer not null primary key autoincrement, value blob)")
-    db.prepare("insert into T (id, value) values (?, ?)").bind(1, 999).bindZeroBlob(2, BlobTests.SIZE).stepThrough.dispose()
+    db.prepare("insert into T (id, value) values (?, ?)").bind(1, 999).bindZeroBlob(2, BlobTests.SIZE).stepThrough().dispose()
     val blob = db.blob("T", "value", 999, true)
     assert(blob != null)
     db.dispose()

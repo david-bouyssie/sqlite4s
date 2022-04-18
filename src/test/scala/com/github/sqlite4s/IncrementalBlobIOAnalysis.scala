@@ -24,7 +24,7 @@ import utest._
 object IncrementalBlobIOAnalysis extends SQLiteConnectionFixture {
 
   val tests = Tests {
-    'testRead - testRead
+    "testRead" - testRead()
   }
 
   private val COUNT = 100

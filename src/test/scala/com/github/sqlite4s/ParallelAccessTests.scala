@@ -60,8 +60,8 @@ object ParallelAccessTests extends SQLiteConnectionFixture {
   }
 
   val tests = Tests {
-    'testParallelReads - testParallelReads
-    'testWriteWhileReadInProgress - testWriteWhileReadInProgress
+    "testParallelReads" - testParallelReads
+    "testWriteWhileReadInProgress" - testWriteWhileReadInProgress
   }
 
   @throws[Exception]

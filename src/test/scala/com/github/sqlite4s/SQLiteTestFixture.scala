@@ -21,6 +21,7 @@ import java.io.File
 import java.util.Random
 
 import com.github.sqlite4s.bindings.sqlite
+import com.github.sqlite4s.bindings.SQLITE_CONSTANT
 import utest.TestSuite
 
 object SQLiteTestFixture {
@@ -254,11 +255,11 @@ abstract class SQLiteTestFixture() extends TestSuite with Logging {
     utest.assert(result == lastResultCode() )
   }
   protected def assertDb(): Unit = {
-    utest.assert(lastDb != null)
+    utest.assert(lastDb() != null)
   }
 
   protected def assertOk(): Unit = {
-    assertResult(sqlite.SQLITE_CONSTANT.SQLITE_OK)
+    assertResult(SQLITE_CONSTANT.SQLITE_OK)
   }
 
   protected def prepare(sql: String): SQLiteStatement.Handle = {

@@ -19,7 +19,7 @@ package com.github.sqlite4s
 
 import java.io._
 
-import com.github.sqlite4s.bindings.sqlite.SQLITE_CONSTANT._
+import com.github.sqlite4s.bindings.SQLITE_CONSTANT._
 
 import utest._
 
@@ -27,24 +27,24 @@ object SQLiteBasicTests extends SQLiteTestFixture() {
   private val RW = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE
 
   val tests = Tests {
-    'testOpen - testOpen
-    'testOpenMemory - testOpenMemory
-    'testOpenReadOnly - testOpenReadOnly
-    'testPrepareBindStepResetFinalize - testPrepareBindStepResetFinalize
-    'testPrepareWithParam - testPrepareWithParam
-    'testUnparseableSql - testUnparseableSql
-    'testStatementSurvivesSchemaChange - testStatementSurvivesSchemaChange
-    'testBindText - testBindText
-    'testTextBindAndColumn - testTextBindAndColumn
+    "testOpen" - testOpen()
+    "testOpenMemory" - testOpenMemory()
+    "testOpenReadOnly" - testOpenReadOnly()
+    "testPrepareBindStepResetFinalize" - testPrepareBindStepResetFinalize()
+    "testPrepareWithParam" - testPrepareWithParam()
+    "testUnparseableSql" - testUnparseableSql()
+    "testStatementSurvivesSchemaChange" - testStatementSurvivesSchemaChange()
+    "testBindText" - testBindText()
+    "testTextBindAndColumn" - testTextBindAndColumn()
   }
 
   def testOpen(): Unit = {
     val name = tempName("db")
     open(name, SQLITE_OPEN_READONLY)
-    assert(lastDb == null)
+    assert(lastDb() == null)
     assertResult(SQLITE_CANTOPEN)
     open(name, SQLITE_OPEN_READWRITE)
-    assert(lastDb == null)
+    assert(lastDb() == null)
     assertResult(SQLITE_CANTOPEN)
     open(name, SQLiteBasicTests.RW)
     assertDb()

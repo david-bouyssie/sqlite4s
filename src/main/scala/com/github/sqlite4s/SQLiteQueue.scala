@@ -140,7 +140,7 @@ class SQLiteQueue(
     * @param databaseFile database file to connect to, or null to open an in-memory database
     * @see #start
     */
-  def this(databaseFile: File) {
+  def this(databaseFile: File) = {
     this(databaseFile, Executors.defaultThreadFactory)
   }
 
@@ -151,7 +151,7 @@ class SQLiteQueue(
     *
     * @see #start
     */
-  def this() {
+  def this() = {
     this(null)
   }
 
@@ -192,7 +192,7 @@ class SQLiteQueue(
         }
       })
 
-      if (thread == null) throw new IllegalStateException(this + " cannot create new thread")
+      if (thread == null) throw new IllegalStateException(s"$this cannot create new thread")
 
       val name = thread.getName
       // override default thread names
@@ -359,7 +359,7 @@ class SQLiteQueue(
     assert(Thread.holdsLock(myLock), job)
     var jobs = myJobs
     if (jobs == null) {
-      jobs = createJobCollection
+      jobs = createJobCollection()
       myJobs = jobs
     }
     jobs.add(job)
@@ -497,7 +497,7 @@ class SQLiteQueue(
   protected def executeJob(job: SQLiteJob[_]): Unit = {
     if (job == null) return
     val connection = myConnection
-    if (connection == null) throw new IllegalStateException(this + ": executeJob: no connection")
+    if (connection == null) throw new IllegalStateException(s"$this: executeJob: no connection")
     try {
       if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), s"executing $job"))
       job.execute(connection, this)
@@ -626,7 +626,7 @@ class SQLiteQueue(
         myLock.notify()
 
         while (job == null) {
-          if (myStopRequested && (myStopRequired || isJobQueueEmpty)) {
+          if (myStopRequested && (myStopRequired || isJobQueueEmpty())) {
             if (canLogTrace) logger.trace(Internal.mkLogMessage(this.toString(), "thread exiting"))
             return
           }
@@ -656,7 +656,7 @@ class SQLiteQueue(
   }
 
   private def threadStopped(): Unit = {
-    assert(Thread.currentThread == myThread, Thread.currentThread + " " + myThread)
+    assert(Thread.currentThread == myThread, s"${Thread.currentThread} $myThread")
     disposeConnection(myConnection)
     myConnection = null
     var reincarnate = false
