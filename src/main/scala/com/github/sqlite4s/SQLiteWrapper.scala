@@ -633,7 +633,10 @@ class SQLiteWrapper {
       textAsStr = fromCString(text, UTF16_CHARSET)*/
 
       val length = sqlite.sqlite3_column_bytes(stmt, column)
-      if (length < 0) WRAPPER_WEIRD_2
+      if (length < 0) {
+        myLastReturnCode = WRAPPER_WEIRD_2
+        return null
+      }
 
       textAsStr = fromCString(text, SQLiteWrapper.UTF8_CHARSET)
 
@@ -696,7 +699,10 @@ class SQLiteWrapper {
     }
     else {
       length = sqlite.sqlite3_column_bytes(stmt, column)
-      if (length < 0) WRAPPER_WEIRD_2
+      if (length < 0) {
+        myLastReturnCode = WRAPPER_WEIRD_2
+        return null
+      }
 
       SQLITE_OK
     }
