@@ -1,10 +1,10 @@
 name := "sqlite4s"
 organization := "com.github.david-bouyssie"
-version := "0.4.1"
-scalaVersion := "2.13.6"
-crossScalaVersions := Seq("3.1.2", "2.13.6", "2.12.15") // , "2.11.12"
+version := "0.5.0"
+scalaVersion := "2.13.8"
+crossScalaVersions := Seq("3.1.2", "2.13.8", "2.12.15", "2.11.12")
 
-libraryDependencies += "com.outr" %%% "scribe" % "3.8.2"
+libraryDependencies += "com.outr" %%% "scribe" % "3.6.2"
 libraryDependencies += "com.lihaoyi" %%% "utest" % "0.7.11" % Test
 
 testFrameworks += new TestFramework("utest.runner.Framework")
@@ -16,8 +16,8 @@ enablePlugins(ScalaNativePlugin)
 // Set to false or remove if you want to show stubs as linking errors
 nativeLinkStubs := true
 
-nativeMode := "release-fast" //"release-fast"
-nativeLTO := "thin" //"none" //"thin"
+nativeMode := "debug" //"release-fast"
+nativeLTO := "none" //"none" //"thin"
 nativeLinkingOptions ++= Seq(
   "-L" ++ baseDirectory.value.getAbsolutePath() ++ "/nativelib"
 )

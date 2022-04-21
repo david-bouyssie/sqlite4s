@@ -94,9 +94,9 @@ object sqlite {
   type fts5_tokenizer = struct_fts5_tokenizer
   //type struct_fts5_api = CStruct4[CInt, CFuncPtr5[Ptr[Byte], CString, Ptr[Byte], Ptr[struct_fts5_tokenizer], CFuncPtr1[Ptr[Byte], Unit], CInt], CFuncPtr4[Ptr[Byte], CString, Ptr[Ptr[Byte]], Ptr[struct_fts5_tokenizer], CInt], CFuncPtr5[Ptr[Byte], CString, Ptr[Byte], CFuncPtr5[Ptr[struct_Fts5ExtensionApi], Ptr[struct_Fts5Context], Ptr[struct_sqlite3_context], CInt, Ptr[Ptr[struct_sqlite3_value]], Unit], CFuncPtr1[Ptr[Byte], Unit], CInt]]
   //type fts5_api = struct_fts5_api
-  val sqlite3_version: CString = extern
-  val sqlite3_temp_directory: CString = extern
-  val sqlite3_data_directory: CString = extern
+  //val sqlite3_version: CString = extern // not always exported, use sqlite3_libversion()
+  //def sqlite3_temp_directory: CString = extern // FIXME: can't be used for now, but can be changed on Windows (see sqlite_addons.sqlite3_win32_set_directory)
+  //def sqlite3_data_directory: CString = extern // FIXME: can't be used for now, but can be changed on Windows (see sqlite_addons.sqlite3_win32_set_directory)
   def sqlite3_libversion(): CString = extern
   def sqlite3_sourceid(): CString = extern
   def sqlite3_libversion_number(): CInt = extern
