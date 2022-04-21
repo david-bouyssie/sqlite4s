@@ -22,7 +22,7 @@ import utest._
 object RTreeTests extends SQLiteConnectionFixture {
 
   val tests = Tests {
-    //'testRTree - testRTree
+    //"testRTree" - testRTree
   }
 
   @throws[SQLiteException]

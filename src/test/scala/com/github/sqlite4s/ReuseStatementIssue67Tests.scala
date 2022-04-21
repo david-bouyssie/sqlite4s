@@ -22,7 +22,7 @@ import utest._
 object ReuseStatementIssue67Tests extends SQLiteConnectionFixture {
 
   val tests = Tests {
-    'testTest - testTest
+    "testTest" - testTest()
   }
 
   @throws[SQLiteException]

@@ -29,17 +29,17 @@ object SQLiteBackupTests extends SQLiteConnectionFixture {
   private val ROWS_NUMBER = 5400
 
   val tests = Tests {
-    'testOneStepBackupMemoryToFile - testOneStepBackupMemoryToFile
-    'testOneStepBackupMemoryToMemory - testOneStepBackupMemoryToMemory
-    'testOneStepBackupFileToFile - testOneStepBackupFileToFile
-    'testOneStepBackupFileToMemory - testOneStepBackupFileToMemory
-    'testStepFailWhenConnectionDisposed - testStepFailWhenConnectionDisposed
-    'testDestinationAutoUpdate - testDestinationAutoUpdate
-    'testBackupRestarting - testBackupRestarting
-    'testBackupWithSharingLockOnSource - testBackupWithSharingLockOnSource
-    'testBackupWithReservedLock - testBackupWithReservedLock
-    'testBackupFailWithReservedLockEstablishedBySourceConnection - testBackupFailWithReservedLockEstablishedBySourceConnection
-    'testBackupFailWhenExclusiveLockOnSourceEstablished - testBackupFailWhenExclusiveLockOnSourceEstablished
+    "testOneStepBackupMemoryToFile" - testOneStepBackupMemoryToFile()
+    "testOneStepBackupMemoryToMemory" - testOneStepBackupMemoryToMemory()
+    "testOneStepBackupFileToFile" - testOneStepBackupFileToFile()
+    "testOneStepBackupFileToMemory" - testOneStepBackupFileToMemory()
+    "testStepFailWhenConnectionDisposed" - testStepFailWhenConnectionDisposed()
+    "testDestinationAutoUpdate" - testDestinationAutoUpdate()
+    "testBackupRestarting" - testBackupRestarting()
+    "testBackupWithSharingLockOnSource" - testBackupWithSharingLockOnSource()
+    "testBackupWithReservedLock" - testBackupWithReservedLock()
+    "testBackupFailWithReservedLockEstablishedBySourceConnection" - testBackupFailWithReservedLockEstablishedBySourceConnection()
+    "testBackupFailWhenExclusiveLockOnSourceEstablished" - testBackupFailWhenExclusiveLockOnSourceEstablished()
   }
 
   @throws[SQLiteException]
@@ -293,8 +293,8 @@ object SQLiteBackupTests extends SQLiteConnectionFixture {
       fail("Backup disposed DB")
     } catch {
       case e: SQLiteException =>
-        if (e.getErrorCode != errorCode) println(s"Got error code '${e.getErrorCode}' while expecting '$errorCode'")
-        assert(e.getErrorCode == errorCode)
+        if (e.getErrorCode() != errorCode) println(s"Got error code '${e.getErrorCode()}' while expecting '$errorCode'")
+        assert(e.getErrorCode() == errorCode)
     }
   }
 }

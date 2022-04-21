@@ -56,7 +56,7 @@ final class SQLParts(
     *
     * @param copyFrom the original object
     */
-  def this(copyFrom: SQLParts) {
+  def this(copyFrom: SQLParts) = {
     this(new ArrayList[String](if (copyFrom == null) 5 else copyFrom.myParts.size))
     if (copyFrom != null) myParts.addAll(copyFrom.myParts)
   }
@@ -66,7 +66,7 @@ final class SQLParts(
     *
     * @param sql SQL piece
     */
-  def this(sql: String) {
+  def this(sql: String) = {
     this(new ArrayList[String](1))
     append(sql)
   }

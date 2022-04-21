@@ -34,7 +34,7 @@ class ProgressHandler private() {
   private var myBuffer: ByteBuffer = _
   private var myLongs: LongBuffer = _
 
-  def this(pointer: DirectBuffer.Handle, buffer: ByteBuffer, stepsPerCallback: Int) {
+  def this(pointer: DirectBuffer.Handle, buffer: ByteBuffer, stepsPerCallback: Int) = {
     this()
     myStepsPerCallback = stepsPerCallback
     assert(buffer.isDirect)

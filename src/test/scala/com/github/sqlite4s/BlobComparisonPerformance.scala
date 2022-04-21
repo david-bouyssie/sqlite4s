@@ -31,8 +31,8 @@ import utest._
 object BlobComparisonPerformance extends SQLiteConnectionFixture {
 
   val tests = Tests {
-    'testInsertion - testInsertion
-    'testRetrieval - testRetrieval
+    "testInsertion" - testInsertion
+    "testRetrieval" - testRetrieval
   }
 
   abstract private[sqlite4s] class InsertionMethod(val myName: String) {

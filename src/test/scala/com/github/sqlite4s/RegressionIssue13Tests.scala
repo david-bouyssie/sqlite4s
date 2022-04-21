@@ -22,8 +22,8 @@ import utest._
 object RegressionIssue13Tests extends SQLiteConnectionFixture {
 
   val tests = Tests {
-    'testColumnCountBug2 - testColumnCountBug2
-    'testUnstableColumnResult - testUnstableColumnResult
+    "testColumnCountBug2"- testColumnCountBug2()
+    "testUnstableColumnResult" - testUnstableColumnResult()
   }
 
   /**

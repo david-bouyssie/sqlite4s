@@ -22,7 +22,7 @@ import utest._
 object SQLPartsTests extends TestSuite {
 
   val tests = Tests {
-    'testAppendParams - testAppendParams
+    "testAppendParams" - testAppendParams()
   }
 
   def testAppendParams(): Unit = {

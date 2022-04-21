@@ -17,22 +17,22 @@
 
 package com.github.sqlite4s
 
-import com.github.sqlite4s.bindings.sqlite.SQLITE_CONSTANT._
+import com.github.sqlite4s.bindings.SQLITE_CONSTANT._
 import utest._ // {Tests, assert, intercept}
 
 object SQLiteConnectionTests extends SQLiteConnectionFixture {
 
   val tests = Tests {
-    'testOpenFile - testOpenFile
-    'testOpenMemory - testOpenMemory
-    'testExec - testExec
-    'testGetTableColumnMetadata - testGetTableColumnMetadata
-    'testSetAndGetLimit - testSetAndGetLimit
-    'testCannotReopen - testCannotReopen
-    'testOpenV2 - testOpenV2
-    'testPrepareV3 - testPrepareV3
-    'testIsReadOnly - testIsReadOnly
-    'testFlush - testFlush
+    "testOpenFile" - testOpenFile()
+    "testOpenMemory" - testOpenMemory()
+    "testExec" - testExec()
+    "testGetTableColumnMetadata" - testGetTableColumnMetadata()
+    "testSetAndGetLimit" - testSetAndGetLimit()
+    "testCannotReopen" - testCannotReopen()
+    "testOpenV2" - testOpenV2()
+    "testPrepareV3" - testPrepareV3()
+    "testIsReadOnly" - testIsReadOnly()
+    "testFlush" - testFlush()
   }
 
   @throws[SQLiteException]
@@ -63,7 +63,7 @@ object SQLiteConnectionTests extends SQLiteConnectionFixture {
 
     connection.open(true)
     assert(connection.isOpen())
-    assert(dbFile == connection.getDatabaseFile)
+    assert(dbFile == connection.getDatabaseFile())
 
     connection.dispose()
     assert(!connection.isOpen())
@@ -134,8 +134,8 @@ object SQLiteConnectionTests extends SQLiteConnectionFixture {
       val tableName = "xxx"
       val columnName = "x"
       val metadata = db.getTableColumnMetadata(dbName, tableName, columnName)
-      assert("INTEGER" == metadata.getDataType)
-      assert("BINARY" == metadata.getCollSeq)
+      assert("INTEGER" == metadata.getDataType())
+      assert("BINARY" == metadata.getCollSeq())
       assert(!metadata.isNotNull)
       assert(metadata.isPrimaryKey)
       assert(!metadata.isAutoInc)
@@ -199,7 +199,7 @@ object SQLiteConnectionTests extends SQLiteConnectionFixture {
     con.exec("create table x(x)")
     val stmt = con.prepare("insert into x values(?)", SQLITE_PREPARE_PERSISTENT)
     stmt.bind(1, "42")
-    stmt.step
+    stmt.step()
     con.dispose()
   }
 

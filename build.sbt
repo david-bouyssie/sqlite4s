@@ -2,10 +2,10 @@ name := "sqlite4s"
 organization := "com.github.david-bouyssie"
 version := "0.4.1"
 scalaVersion := "2.13.6"
-crossScalaVersions := Seq("2.13.6", "2.12.15") // , "2.11.12"
+crossScalaVersions := Seq("3.1.2", "2.13.6", "2.12.15") // , "2.11.12"
 
-libraryDependencies += "com.outr" %%% "scribe" % "3.6.1"
-libraryDependencies += "com.lihaoyi" %%% "utest" % "0.7.10" % "test"
+libraryDependencies += "com.outr" %%% "scribe" % "3.8.2"
+libraryDependencies += "com.lihaoyi" %%% "utest" % "0.7.11" % Test
 
 testFrameworks += new TestFramework("utest.runner.Framework")
 // Disable parallel execution of tests (as they need to be launched independently)
@@ -60,7 +60,7 @@ publishTo := {
 //useGpg := true // (since 2.0.0): useGpg is true by default
 //pgpPublicRing := file("~/.gnupg/pubring.kbx")
 //pgpSecretRing := file("~/.gnupg/pubring.kbx")
-Test / skip / publish := true
+Test / publish / skip := true
 
 /*
 val commonSettings = Seq(

@@ -22,7 +22,7 @@ import scala.scalanative.unsafe._
 import Internal._
 import SQLITE_WRAPPER_ERROR_CODE._
 import com.github.sqlite4s.bindings.sqlite
-import sqlite.SQLITE_CONSTANT._
+import bindings.SQLITE_CONSTANT._
 
 object SQLiteBlob {
 

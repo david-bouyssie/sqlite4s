@@ -23,7 +23,7 @@ import scala.scalanative.unsafe._
 import com.github.sqlite4s.c.util.CUtils
 
 import bindings._
-import bindings.sqlite.SQLITE_CONSTANT._
+import bindings.SQLITE_CONSTANT._
 
 /**
   * The SQLite object has several utility methods that are applicable to the whole instance of
@@ -195,7 +195,7 @@ object SQLite {
     * @see <a href="https://www.sqlite.org/c3ref/win32_set_directory.html">sqlite3_win32_set_directory</a>
     */
   def setDirectory(directoryType: Int, path: String): Unit = {
-    assert(Platform.isWindows, "setDirectory() is a windows specific method")
+    assert(Platform.isWindows(), "setDirectory() is a windows specific method")
 
     val rc = Zone { implicit z =>
       sqlite_addons.sqlite3_win32_set_directory(directoryType, CUtils.toCString(path))

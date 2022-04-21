@@ -20,7 +20,7 @@ package com.github.sqlite4s
 import scala.scalanative.unsafe._
 
 import bindings.sqlite
-import bindings.sqlite.SQLITE_CONSTANT._
+import bindings.SQLITE_CONSTANT._
 import SQLITE_WRAPPER_ERROR_CODE.WRAPPER_BACKUP_DISPOSED
 
 object SQLiteBackup {

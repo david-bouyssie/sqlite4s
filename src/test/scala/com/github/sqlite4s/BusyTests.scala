@@ -25,11 +25,11 @@ import utest._
 object BusyTests extends SQLiteConnectionFixture {
 
   val tests = Tests {
-    'testReadLockTransactionFails - testReadLockTransactionFails
-    'testReadLockTransactionFailsWithTimeout - testReadLockTransactionFailsWithTimeout
-    'testReadLockTransactionWaits - testReadLockTransactionWaits
-    'testBusySpillPre36 - testBusySpillPre36
-    'testBusySpillPost36 - testBusySpillPost36
+    "testReadLockTransactionFails" - testReadLockTransactionFails
+    "testReadLockTransactionFailsWithTimeout" - testReadLockTransactionFailsWithTimeout
+    "testReadLockTransactionWaits" - testReadLockTransactionWaits
+    "testBusySpillPre"36 - testBusySpillPre36
+    "testBusySpillPost"36 - testBusySpillPost36
   }
 
 

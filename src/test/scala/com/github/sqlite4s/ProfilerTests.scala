@@ -22,7 +22,7 @@ import utest._
 object ProfilerTests extends SQLiteConnectionFixture {
 
   val tests = Tests {
-    'testProfiler - testProfiler
+    "testProfiler" - testProfiler()
   }
 
   @throws[SQLiteException]
@@ -46,7 +46,7 @@ object ProfilerTests extends SQLiteConnectionFixture {
     connection.exec("COMMIT")
 
     st = connection.prepare("SELECT id FROM test ORDER BY id DESC")
-    while (st.step) st.columnLong(0)
+    while (st.step()) st.columnLong(0)
     st.reset()
     //---//st.loadInts(0, new Array[Int](10), 0, 10)
     st.dispose()

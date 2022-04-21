@@ -27,7 +27,7 @@ import utest._
 object DirectBufferTests extends SQLiteConnectionFixture {
 
   val tests = Tests {
-    'testCreation - testCreation
+    "testCreation" - testCreation()
   }
 
   private val SIZE = 1024

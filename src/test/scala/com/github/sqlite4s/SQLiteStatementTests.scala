@@ -17,23 +17,23 @@
 
 package com.github.sqlite4s
 
-import com.github.sqlite4s.bindings.sqlite.SQLITE_CONSTANT._
+import com.github.sqlite4s.bindings.SQLITE_CONSTANT._
 
 import utest._
 
 object SQLiteStatementTests extends SQLiteConnectionFixture {
 
   val tests = Tests {
-    'testPrepareBad - testPrepareBad
-    'testStatementLifecycle - testStatementLifecycle
-    'testCloseFromCorrectThreadWithOpenStatement - testCloseFromCorrectThreadWithOpenStatement
-    'testBadBindIndexes - testBadBindIndexes
-    'testBindParameterNames - testBindParameterNames
-    'testForgottenStatement - testForgottenStatement
-    'testStatementNotReused - testStatementNotReused
-    //'testCaching - testCaching // FIXME: DBO => issue with freed Ptr
-    'testRollbackOnClose - testRollbackOnClose
-    //'testColumnType - testColumnType // FIXME: DBO => issue with freed Ptr
+    "testPrepareBad" - testPrepareBad()
+    "testStatementLifecycle" - testStatementLifecycle()
+    "testCloseFromCorrectThreadWithOpenStatement" - testCloseFromCorrectThreadWithOpenStatement()
+    "testBadBindIndexes" - testBadBindIndexes()
+    "testBindParameterNames" - testBindParameterNames()
+    "testForgottenStatement" - testForgottenStatement()
+    "testStatementNotReused" - testStatementNotReused()
+    //"testCaching" - testCaching // FIXME: DBO => issue with freed Ptr
+    "testRollbackOnClose" - testRollbackOnClose()
+    //"testColumnType" - testColumnType // FIXME: DBO => issue with freed Ptr
   }
 
   @throws[SQLiteException]
@@ -87,7 +87,7 @@ object SQLiteStatementTests extends SQLiteConnectionFixture {
     assert(st2 != st3)
     assert(st2 != st4)
     assert(st3 != st4)
-    assert(h3 == st4.statementHandle)
+    assert(h3 == st4.statementHandle())
     assert(3 == connection.getStatementCount())
     assert(!st1.isDisposed())
     assert(!st2.isDisposed())
@@ -266,7 +266,7 @@ object SQLiteStatementTests extends SQLiteConnectionFixture {
     val st1 = connection.prepare(sql)
     val st2 = connection.prepare(sql)
     assert(st1 != st2)
-    assert(st1.statementHandle != st2.statementHandle)
+    assert(st1.statementHandle() != st2.statementHandle())
     val h1 = st1.statementHandle()
     st1.dispose()
     st2.dispose()

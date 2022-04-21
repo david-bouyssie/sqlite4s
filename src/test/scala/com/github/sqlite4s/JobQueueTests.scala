@@ -151,20 +151,20 @@ object JobQueueTests extends SQLiteConnectionFixture {
   }
 
   val tests = Tests {
-    'testStartStop - testStartStop
-    'testStartStopUnusual - testStartStopUnusual
-    'testBadThreadFactory - testBadThreadFactory
-    'testGracefulStop - testGracefulStop
-    'testNonGracefulStop - testNonGracefulStop
-    'testExecuteAfterStop - testExecuteAfterStop
-    'testExecuteBeforeStart - testExecuteBeforeStart
-    'testFlush - testFlush
-    'testExecute - testExecute
-    'testBasicOpen - testBasicOpen
-    'testCancelRollback - testCancelRollback
-    'testJobError - testJobError
-    'testAbnormalStop - testAbnormalStop
-    'testReincarnation - testReincarnation
+    "testStartStop" - testStartStop
+    "testStartStopUnusual" - testStartStopUnusual
+    "testBadThreadFactory" - testBadThreadFactory
+    "testGracefulStop" - testGracefulStop
+    "testNonGracefulStop" - testNonGracefulStop
+    "testExecuteAfterStop" - testExecuteAfterStop
+    "testExecuteBeforeStart" - testExecuteBeforeStart
+    "testFlush" - testFlush
+    "testExecute" - testExecute
+    "testBasicOpen" - testBasicOpen
+    "testCancelRollback" - testCancelRollback
+    "testJobError" - testJobError
+    "testAbnormalStop" - testAbnormalStop
+    "testReincarnation" - testReincarnation
   }
 
   private var myQueue: TestQueue = _

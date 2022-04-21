@@ -21,13 +21,13 @@ import java.io.File
 
 import utest._
 
-import com.github.sqlite4s.bindings.sqlite_addons.SQLITE_CONSTANT
+import com.github.sqlite4s.bindings.SQLITE_CONSTANT
 
 object MiscTests extends SQLiteTestFixture {
 
   val tests = Tests {
-    'testCreatingDatabaseInNonExistingDirectory - testCreatingDatabaseInNonExistingDirectory
-    //'testSetDirectory - testSetDirectory
+    "testCreatingDatabaseInNonExistingDirectory" - testCreatingDatabaseInNonExistingDirectory()
+    //"testSetDirectory" - testSetDirectory
   }
 
   def testCreatingDatabaseInNonExistingDirectory(): Unit = {

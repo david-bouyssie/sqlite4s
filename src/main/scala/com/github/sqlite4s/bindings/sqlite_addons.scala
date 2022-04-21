@@ -18,36 +18,36 @@ package com.github.sqlite4s.bindings
 
 import scala.scalanative.unsafe._
 
-import sqlite.SQLITE_CONSTANT._
+import SQLITE_CONSTANT._
 
 @link("sqlite3")
 @extern
 object sqlite_addons {
-
-  object SQLITE_CONSTANT {
-    val SQLITE_WIN32_DATA_DIRECTORY_TYPE = 1
-    val SQLITE_WIN32_TEMP_DIRECTORY_TYPE = 2
-
-    val SQLITE_STATIC: Long = 0L
-    val SQLITE_TRANSIENT: Long = -1L
-  }
-
   type sqlite3_destructor_type = sqlite.sqlite3_destructor_type //CFuncPtr1[Ptr[CSignedChar], Unit]
-  object DESTRUCTOR_TYPE {
-
-    @inline def castToDestructorType(dVal: Long): sqlite3_destructor_type = {
-      scala.scalanative.runtime.Boxes.boxToCFuncPtr1(
-        scala.scalanative.runtime.Intrinsics.castLongToRawPtr(dVal)
-      ).asInstanceOf[sqlite3_destructor_type]
-    }
-
-    val SQLITE_STATIC: sqlite3_destructor_type = castToDestructorType(SQLITE_CONSTANT.SQLITE_STATIC)
-    val SQLITE_TRANSIENT: sqlite3_destructor_type = castToDestructorType(SQLITE_CONSTANT.SQLITE_TRANSIENT)
-  }
 
   def sqlite3_win32_set_directory(dir_type: CInt, zValue: Ptr[Byte]): CInt = extern
   def sqlite3_win32_set_directory8(dir_type: CInt, zValue: Ptr[CChar]): CInt = extern
   def sqlite3_win32_set_directory16(dir_type: CInt, zValue: Ptr[Byte]): CInt = extern
+}
+object DESTRUCTOR_TYPE {
+  import sqlite_addons._
+
+  @inline def castToDestructorType(dVal: Long): sqlite3_destructor_type = {
+    scala.scalanative.runtime.Boxes.boxToCFuncPtr1(
+      scala.scalanative.runtime.Intrinsics.castLongToRawPtr(dVal)
+    ).asInstanceOf[sqlite3_destructor_type]
+  }
+
+  val SQLITE_STATIC: sqlite3_destructor_type = castToDestructorType(SQLITE_ADDONS_CONSTANT.SQLITE_STATIC)
+  val SQLITE_TRANSIENT: sqlite3_destructor_type = castToDestructorType(SQLITE_ADDONS_CONSTANT.SQLITE_TRANSIENT)
+}
+
+object SQLITE_ADDONS_CONSTANT {
+  val SQLITE_WIN32_DATA_DIRECTORY_TYPE = 1
+  val SQLITE_WIN32_TEMP_DIRECTORY_TYPE = 2
+
+  val SQLITE_STATIC: Long = 0L
+  val SQLITE_TRANSIENT: Long = -1L
 }
 
 /**

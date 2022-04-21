@@ -186,7 +186,7 @@ object CUtils {
 
 final class CStringWrapper(var c_str: CString, var length: CSize) {
 
-  def this(c_str: CString) {
+  def this(c_str: CString) = {
     this(c_str, string.strlen(c_str))
   }
 

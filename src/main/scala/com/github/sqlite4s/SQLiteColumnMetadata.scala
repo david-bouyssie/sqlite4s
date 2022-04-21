@@ -17,8 +17,6 @@
 
 package com.github.sqlite4s
 
-import scala.beans.BeanProperty
-
 /**
   * <p>{@code SQLiteColumnMetadata} contains information about a table column:</p>
   * <ul>
@@ -39,11 +37,12 @@ import scala.beans.BeanProperty
   * @see <a href="http://www.sqlite.org/c3ref/table_column_metadata.html">sqlite3_table_column_metadata</a>
   */
 case class SQLiteColumnMetadata(
-  @BeanProperty
   dataType: String,
-  @BeanProperty
   collSeq: String,
   isNotNull: Boolean,
   isPrimaryKey: Boolean,
   isAutoInc: Boolean
-)
+) {
+  def getDataType(): String = dataType
+  def getCollSeq(): String = collSeq
+}

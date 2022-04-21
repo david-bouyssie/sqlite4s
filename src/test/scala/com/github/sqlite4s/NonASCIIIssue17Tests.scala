@@ -24,8 +24,8 @@ object NonASCIIIssue17Tests extends SQLiteConnectionFixture {
   private val C01 = "0000" + 55360.toChar + 56384.toChar
 
   val tests = Tests {
-    'testBind - testBind
-    'testConcatSimple - testConcatSimple
+    "testBind" - testBind()
+    "testConcatSimple" - testConcatSimple()
   }
 
   private var cnx: SQLiteConnection = _

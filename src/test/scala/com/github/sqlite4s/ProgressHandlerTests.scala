@@ -22,8 +22,8 @@ import utest._
 object ProgressHandlerTests extends SQLiteConnectionFixture {
 
   val tests = Tests {
-    'testCancel - testCancel
-    'testCancelAndTransactions - testCancelAndTransactions
+    "testCancel" - testCancel()
+    "testCancelAndTransactions" - testCancelAndTransactions()
   }
 
   @throws[SQLiteException]

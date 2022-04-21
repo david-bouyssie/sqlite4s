@@ -22,9 +22,9 @@ import java.nio.BufferUnderflowException
 import java.util
 import scala.scalanative.runtime.ByteArray
 import scala.scalanative.unsafe._
-import bindings.sqlite.SQLITE_CONSTANT._
+import bindings.SQLITE_CONSTANT._
 import com.github.sqlite4s.bindings.sqlite_addons.sqlite3_destructor_type
-import com.github.sqlite4s.bindings.sqlite_addons.DESTRUCTOR_TYPE._
+import com.github.sqlite4s.bindings.DESTRUCTOR_TYPE._
 import com.github.sqlite4s.c.util.CUtils
 import Internal._
 import SQLITE_WRAPPER_ERROR_CODE._
@@ -139,7 +139,7 @@ final class SQLiteStatement private() extends Logging {
     * @param profiler   an instance of profiler for the statement, or null
     * @see SQLiteConnection#prepare(String, boolean)
     */
-  def this(controller: SQLiteController, handle: SQLiteStatement.Handle, sqlParts: SQLParts, profiler: SQLiteProfiler) {
+  def this(controller: SQLiteController, handle: SQLiteStatement.Handle, sqlParts: SQLParts, profiler: SQLiteProfiler) = {
     this()
 
     assert(handle != null, "handle is null")
